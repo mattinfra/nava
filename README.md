@@ -1,6 +1,4 @@
-# GolfoLive
-
-Vedi [CLAUDE.md](./CLAUDE.md) per contesto di progetto e convenzioni, [PLAN.md](./PLAN.md) per le fasi.
+# Nava
 
 ## Struttura
 
@@ -19,6 +17,3 @@ npm run test
 npm run lint
 npm run build
 ```
-
-Stato attuale: Fase 0 (fondamenta) — scheletro monorepo. CI, Terraform e autenticazione base non
-ancora implementati.
