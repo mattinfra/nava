@@ -1271,6 +1271,214 @@ section {
   box-shadow: var(--shadow-3);
 }
 
+/* ---------- AR demo overlay: pannable "camera" viewfinder mockup ----------
+   Clearly labelled as a concept demo (not a live camera feed) — the AR
+   module itself is Fase 4 / bonus per the roadmap and is not being built
+   here; this is a marketing mockup for the pitch, same spirit as the other
+   simulated panels in this phone. */
+
+.ar-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  border-radius: 32px;
+  background: #0a1417;
+  touch-action: none;
+  cursor: grab;
+}
+.ar-overlay:active { cursor: grabbing; }
+
+.ar-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ar-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.58) 100%);
+}
+
+.ar-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 36%;
+  top: -36%;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(224,189,109,0.10), transparent);
+  animation: arScan 5.5s ease-in-out infinite;
+}
+@keyframes arScan {
+  0%, 100% { top: -36%; }
+  50% { top: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-scan-line { animation: none; opacity: 0; }
+}
+
+.ar-topbar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ar-demo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #14201d;
+  background: var(--brass-soft);
+  padding: 6px 11px 6px 9px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,0.5);
+  white-space: nowrap;
+}
+.ar-demo-badge .icon { width: 12px; height: 12px; }
+
+.ar-close {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(10,20,23,0.55);
+  color: #eaf3f1;
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.1s ease;
+}
+.ar-close .icon { width: 14px; height: 14px; }
+.ar-close:active { transform: scale(0.9); }
+
+.ar-tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transform: translate(-50%, -100%);
+  padding: 7px 10px 7px 8px;
+  border-radius: 12px;
+  background: rgba(10, 20, 23, 0.6);
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px -6px rgba(0,0,0,0.55);
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.ar-tag::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 14px;
+  background: rgba(255,255,255,0.3);
+}
+.ar-tag-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--tag-color, var(--brass-soft));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tag-color, var(--brass-soft)) 30%, transparent);
+}
+.ar-tag-body { display: flex; flex-direction: column; gap: 1px; }
+.ar-tag-name { font-size: 0.72rem; font-weight: 700; color: #f4f9f8; }
+.ar-tag-rank { font-weight: 600; color: var(--brass-soft); }
+.ar-tag-meta { font-size: 0.62rem; color: #b7c9c7; }
+
+.ar-edge-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(224,189,109,0.88);
+  color: #14201d;
+  animation: arEdgePulse 1.4s ease-in-out infinite;
+}
+.ar-edge-arrow.left { left: 10px; }
+.ar-edge-arrow.left .icon { transform: rotate(180deg); }
+.ar-edge-arrow.right { right: 10px; }
+.ar-edge-arrow .icon { width: 15px; height: 15px; }
+.ar-edge-arrow[hidden] { display: none; }
+@keyframes arEdgePulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-edge-arrow { animation: none; }
+}
+
+.ar-hint {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  margin: 0;
+  font-size: 0.64rem;
+  letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.75);
+  background: rgba(10,20,23,0.45);
+  padding: 5px 11px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  transition: opacity 0.6s ease;
+}
+.ar-hint.faded { opacity: 0; }
+
+.ar-bottom-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 14px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 15px;
+  border-radius: 16px;
+  background: rgba(10, 20, 23, 0.6);
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px -10px rgba(0,0,0,0.6);
+}
+.ar-bottom-label { font-size: 0.6rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--brass-soft); font-weight: 700; }
+.ar-bottom-title { font-size: 0.92rem; font-weight: 700; color: #f4f9f8; }
+.ar-bottom-meta { font-size: 0.72rem; color: #b7c9c7; }
+
 /* ---- Vantage-point dock: a fixed-height strip *below* the map, not an
    overlay sheet on top of it — the map keeps its full canvas, the dock
    keeps its own lane, so neither ever covers the other. ---- */

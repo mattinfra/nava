@@ -402,7 +402,6 @@
               <button class="ar-teaser" id="arTeaser" type="button">
                 <svg class="icon"><use href="#icon-sparkle"/></svg> Visualizza in AR
               </button>
-              <div class="ar-tooltip" id="arTooltip" hidden>In arrivo con il modulo AR — Fase 4, dopo M1 e M2 stabili.</div>
             </div>
           </div>
 
@@ -470,6 +469,43 @@
             <div class="lb-row"><span class="pos mono">1</span><span>marcorossi_87</span><span class="pts mono">1.240</span></div>
             <div class="lb-row you"><span class="pos mono">2</span><span>tu</span><span class="pts mono">1.180</span></div>
             <div class="lb-row"><span class="pos mono">3</span><span>giuliavela</span><span class="pts mono">1.155</span></div>
+          </div>
+        </div>
+
+        <div class="ar-overlay" id="arOverlay" hidden aria-label="Anteprima concept AR — modalità dimostrativa">
+          <canvas class="ar-canvas" id="arCanvas" aria-hidden="true"></canvas>
+          <div class="ar-vignette" aria-hidden="true"></div>
+          <div class="ar-scan-line" aria-hidden="true"></div>
+
+          <div class="ar-topbar">
+            <span class="ar-demo-badge"><svg class="icon"><use href="#icon-sparkle"/></svg>Demo AR · concept</span>
+            <button class="ar-close" id="arClose" type="button" aria-label="Chiudi modalità AR">
+              <svg class="icon"><use href="#icon-close"/></svg>
+            </button>
+          </div>
+
+          <div class="ar-tag ar-tag-mark" id="arTagMark">
+            <span class="ar-tag-dot"></span>
+            <span class="ar-tag-body"><span class="ar-tag-name">Boa 3</span><span class="ar-tag-meta mono">a 620 m</span></span>
+          </div>
+          <div class="ar-tag ar-tag-boat" id="arTagA">
+            <span class="ar-tag-dot" style="--tag-color:#e0654f"></span>
+            <span class="ar-tag-body"><span class="ar-tag-name">Sirena <span class="ar-tag-rank mono">1°</span></span><span class="ar-tag-meta mono">18.4 kn · 340 m</span></span>
+          </div>
+          <div class="ar-tag ar-tag-boat" id="arTagB">
+            <span class="ar-tag-dot" style="--tag-color:#4f8fe0"></span>
+            <span class="ar-tag-body"><span class="ar-tag-name">Partenope <span class="ar-tag-rank mono">2°</span></span><span class="ar-tag-meta mono">17.9 kn · 410 m</span></span>
+          </div>
+
+          <div class="ar-edge-arrow left" id="arEdgeLeft" hidden aria-hidden="true"><svg class="icon"><use href="#icon-chevron-right"/></svg></div>
+          <div class="ar-edge-arrow right" id="arEdgeRight" hidden aria-hidden="true"><svg class="icon"><use href="#icon-chevron-right"/></svg></div>
+
+          <p class="ar-hint" id="arHint">Trascina per guardarti intorno</p>
+
+          <div class="ar-bottom-card">
+            <span class="ar-bottom-label">Vantage Point Finder · qui adesso</span>
+            <span class="ar-bottom-title">Castel dell'Ovo <span class="score-chip">94</span></span>
+            <span class="ar-bottom-meta">Visuale libera sulla Boa 3 · vento 14 kn NO</span>
           </div>
         </div>
       </div>

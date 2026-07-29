@@ -1163,20 +1163,6 @@
       });
     }
 
-    // ---- AR teaser tooltip ----
-    var arTeaser = document.getElementById('arTeaser');
-    var arTooltip = document.getElementById('arTooltip');
-    if (arTeaser && arTooltip) {
-      arTeaser.addEventListener('click', function () {
-        arTooltip.hidden = !arTooltip.hidden;
-      });
-      document.addEventListener('click', function (e) {
-        if (!arTooltip.hidden && e.target !== arTeaser && !arTeaser.contains(e.target) && e.target !== arTooltip) {
-          arTooltip.hidden = true;
-        }
-      });
-    }
-
   }
 
   // ---- Phone demo: tab switching ----
@@ -1204,6 +1190,256 @@
     Array.prototype.slice.call(phone.querySelectorAll('.live-link-card, .event-card')).forEach(function (card) {
       card.addEventListener('click', function () { goToTab(card.getAttribute('data-goto')); });
     });
+  }
+
+  // ---- AR demo overlay: pannable "viewfinder" mockup reached from the map
+  // panel's "Visualizza in AR" button. Explicitly labelled as a concept demo
+  // (not a live camera feed) — this mirrors the same simulated-data spirit
+  // as the other phone panels, for pitch purposes only; the real AR module
+  // stays Fase 4 per the roadmap. Boat/mark bearings and the coastline are
+  // panned by dragging, so it reads as "looking around" the gulf. ----
+  var arOverlay = document.getElementById('arOverlay');
+  var arTeaserBtn = document.getElementById('arTeaser');
+  if (arOverlay && arTeaserBtn) {
+    var arCanvas = document.getElementById('arCanvas');
+    var arCtx = arCanvas.getContext('2d');
+    var arDpr = Math.min(window.devicePixelRatio || 1, 2);
+    var aw = 0, ah = 0;
+    var arRafId = null;
+
+    var FOV = 68; // degrees of horizontal field of view rendered on screen
+    var heading = 6; // 0 = facing the start line; positive = panned right
+    var dragging = false;
+    var dragStartX = 0, dragStartHeading = 0;
+
+    // Bearings are relative to a fixed "north" for this scene, independent
+    // of real compass data — purely to make panning feel spatially
+    // consistent (drag right, the world slides the correct direction and
+    // stays put when you drag back).
+    var SCENE = {
+      mark: { bearing: 4, label: 'Boa 3' },
+      vesuvius: { bearing: 52 },
+      posillipo: { bearing: -66 }
+    };
+    var boatState = { aBearing: -13, bBearing: 10 };
+
+    function normDeg(d) {
+      var r = d % 360;
+      if (r > 180) r -= 360;
+      if (r < -180) r += 360;
+      return r;
+    }
+    function bearingToX(bearingDeg) {
+      var rel = normDeg(bearingDeg - heading);
+      return aw / 2 + (rel / (FOV / 2)) * (aw / 2);
+    }
+    function bearingVisible(bearingDeg, margin) {
+      var rel = Math.abs(normDeg(bearingDeg - heading));
+      return rel <= (FOV / 2) * (margin || 1);
+    }
+
+    function arResize() {
+      var rect = arOverlay.getBoundingClientRect();
+      aw = rect.width; ah = rect.height;
+      if (aw === 0 || ah === 0) return;
+      arCanvas.width = aw * arDpr; arCanvas.height = ah * arDpr;
+      arCtx.setTransform(arDpr, 0, 0, arDpr, 0, 0);
+      if (!arRafId) drawAr(performance.now());
+    }
+    window.addEventListener('resize', arResize);
+
+    // Coastline height profile as a function of bearing: a gently varying
+    // shoreline with two named landmarks bumped up out of the noise.
+    function coastHeight(bearing) {
+      var base = 0.10 + 0.03 * Math.sin(bearing * 0.11) + 0.02 * Math.sin(bearing * 0.4 + 1.4);
+      var vesBump = Math.max(0, 1 - Math.abs(normDeg(bearing - SCENE.vesuvius.bearing)) / 9) * 0.22;
+      var posBump = Math.max(0, 1 - Math.abs(normDeg(bearing - SCENE.posillipo.bearing)) / 14) * 0.14;
+      return base + vesBump + posBump;
+    }
+
+    function drawAr(time) {
+      if (aw === 0 || ah === 0) { arRafId = null; return; }
+      var horizonY = ah * 0.56;
+
+      var sky = arCtx.createLinearGradient(0, 0, 0, horizonY);
+      sky.addColorStop(0, '#0d2026');
+      sky.addColorStop(1, '#1b3238');
+      arCtx.fillStyle = sky;
+      arCtx.fillRect(0, 0, aw, horizonY);
+
+      var sea = arCtx.createLinearGradient(0, horizonY, 0, ah);
+      sea.addColorStop(0, '#123840');
+      sea.addColorStop(1, '#081418');
+      arCtx.fillStyle = sea;
+      arCtx.fillRect(0, horizonY, aw, ah - horizonY);
+
+      // Soft sun glare near the mark's bearing, low on the horizon.
+      var glareX = bearingToX(SCENE.mark.bearing - 8);
+      var glareGrad = arCtx.createRadialGradient(glareX, horizonY, 0, glareX, horizonY, aw * 0.35);
+      glareGrad.addColorStop(0, 'rgba(224,189,109,0.16)');
+      glareGrad.addColorStop(1, 'rgba(224,189,109,0)');
+      arCtx.fillStyle = glareGrad;
+      arCtx.fillRect(0, horizonY - ah * 0.2, aw, ah * 0.4);
+
+      // Coastline silhouette, sampled across a wider bearing range than the
+      // visible FOV so it can pan continuously without popping in at edges.
+      arCtx.beginPath();
+      var startB = heading - FOV * 0.85, endB = heading + FOV * 0.85;
+      for (var b = startB; b <= endB; b += 1.4) {
+        var x = bearingToX(b);
+        var y = horizonY - coastHeight(b) * ah;
+        if (b === startB) arCtx.moveTo(x, y); else arCtx.lineTo(x, y);
+      }
+      arCtx.lineTo(bearingToX(endB), ah);
+      arCtx.lineTo(bearingToX(startB), ah);
+      arCtx.closePath();
+      arCtx.fillStyle = 'rgba(14,24,20,0.92)';
+      arCtx.fill();
+      arCtx.strokeStyle = 'rgba(200,155,60,0.4)';
+      arCtx.lineWidth = 1;
+      arCtx.stroke();
+
+      // Water glints for a "live feed" feel.
+      arCtx.save();
+      arCtx.globalCompositeOperation = 'lighter';
+      for (var i = 0; i < 4; i++) {
+        var gx = ((i * 151 + (reduceMotion ? 0 : time * 0.01)) % (aw + 120)) - 60;
+        var gy = horizonY + ah * (0.1 + (i * 0.53 % 1) * 0.55);
+        var gg = arCtx.createRadialGradient(gx, gy, 0, gx, gy, 40);
+        gg.addColorStop(0, 'rgba(150,205,205,0.10)');
+        gg.addColorStop(1, 'rgba(150,205,205,0)');
+        arCtx.fillStyle = gg;
+        arCtx.beginPath();
+        arCtx.ellipse(gx, gy, 40, 12, -0.2, 0, Math.PI * 2);
+        arCtx.fill();
+      }
+      arCtx.restore();
+
+      // Start/course guide line rising from the mark's bearing — the
+      // product's core claim rendered as an AR wayfinding cue.
+      if (bearingVisible(SCENE.mark.bearing, 1.3)) {
+        var mx = bearingToX(SCENE.mark.bearing);
+        arCtx.save();
+        arCtx.setLineDash([2, 6]);
+        arCtx.strokeStyle = 'rgba(224,189,109,0.5)';
+        arCtx.lineWidth = 1.4;
+        arCtx.beginPath();
+        arCtx.moveTo(mx, horizonY - coastHeight(SCENE.mark.bearing) * ah * 0.3);
+        arCtx.lineTo(mx, horizonY + ah * 0.06);
+        arCtx.stroke();
+        arCtx.restore();
+      }
+
+      // Boats: gentle bearing drift for liveliness, drawn as small hulls
+      // with a wake, sitting just below the horizon.
+      var tSec = reduceMotion ? 0 : time / 1000;
+      var aBearing = boatState.aBearing + Math.sin(tSec / 6) * 3.2;
+      var bBearing = boatState.bBearing + Math.sin(tSec / 5 + 1.1) * 2.6;
+      [
+        { bearing: aBearing, color: '#e0654f' },
+        { bearing: bBearing, color: '#4f8fe0' }
+      ].forEach(function (boat) {
+        if (!bearingVisible(boat.bearing, 1.15)) return;
+        var x = bearingToX(boat.bearing);
+        var y = horizonY + ah * 0.045;
+        arCtx.save();
+        arCtx.translate(x, y);
+        arCtx.beginPath();
+        arCtx.moveTo(0, -6);
+        arCtx.lineTo(-2.2, 5.4);
+        arCtx.lineTo(2.2, 5.4);
+        arCtx.closePath();
+        arCtx.fillStyle = boat.color;
+        arCtx.fill();
+        arCtx.beginPath();
+        arCtx.moveTo(0, -7.4);
+        arCtx.lineTo(0, 3.4);
+        arCtx.lineTo(3.6, 1.2);
+        arCtx.closePath();
+        arCtx.fillStyle = 'rgba(255,255,255,0.88)';
+        arCtx.fill();
+        arCtx.restore();
+      });
+
+      // Sync HTML tag chips + edge-arrow wayfinding to the same bearings.
+      positionArTag(document.getElementById('arTagMark'), SCENE.mark.bearing, horizonY - coastHeight(SCENE.mark.bearing) * ah * 0.3 - 2);
+      positionArTag(document.getElementById('arTagA'), aBearing, horizonY + ah * 0.045 - 10);
+      positionArTag(document.getElementById('arTagB'), bBearing, horizonY + ah * 0.045 - 10);
+
+      var edgeLeft = document.getElementById('arEdgeLeft');
+      var edgeRight = document.getElementById('arEdgeRight');
+      var markRel = normDeg(SCENE.mark.bearing - heading);
+      var markOffscreen = Math.abs(markRel) > (FOV / 2) * 1.3;
+      if (edgeLeft) edgeLeft.hidden = !(markOffscreen && markRel < 0);
+      if (edgeRight) edgeRight.hidden = !(markOffscreen && markRel > 0);
+
+      if (!reduceMotion || dragging) {
+        arRafId = requestAnimationFrame(drawAr);
+      } else {
+        arRafId = null;
+      }
+    }
+
+    function positionArTag(el, bearingDeg, y) {
+      if (!el) return;
+      var visible = bearingVisible(bearingDeg, 1.02);
+      if (!visible) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; return; }
+      el.style.opacity = '1';
+      el.style.transform = 'translate(-50%, -100%)';
+      el.style.left = bearingToX(bearingDeg) + 'px';
+      el.style.top = y + 'px';
+    }
+
+    function startAr() {
+      if (arRafId) return;
+      arRafId = requestAnimationFrame(drawAr);
+    }
+
+    function openArOverlay() {
+      arOverlay.hidden = false;
+      arResize();
+      startAr();
+      var hint = document.getElementById('arHint');
+      if (hint) {
+        hint.classList.remove('faded');
+        clearTimeout(hint._fadeTimer);
+        hint._fadeTimer = setTimeout(function () { hint.classList.add('faded'); }, 3200);
+      }
+    }
+    function closeArOverlay() {
+      arOverlay.hidden = true;
+      if (arRafId) { cancelAnimationFrame(arRafId); arRafId = null; }
+    }
+
+    arTeaserBtn.addEventListener('click', openArOverlay);
+    var arCloseBtn = document.getElementById('arClose');
+    if (arCloseBtn) arCloseBtn.addEventListener('click', closeArOverlay);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !arOverlay.hidden) closeArOverlay();
+    });
+
+    // Drag-to-look-around: pointer delta maps to a heading change scaled by
+    // the field of view, so a full-width drag pans roughly one FOV.
+    arOverlay.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('.ar-topbar')) return;
+      dragging = true;
+      dragStartX = e.clientX;
+      dragStartHeading = heading;
+      arOverlay.setPointerCapture(e.pointerId);
+      startAr();
+    });
+    arOverlay.addEventListener('pointermove', function (e) {
+      if (!dragging || aw === 0) return;
+      var dx = e.clientX - dragStartX;
+      heading = dragStartHeading - (dx / aw) * FOV;
+    });
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      try { arOverlay.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    arOverlay.addEventListener('pointerup', endDrag);
+    arOverlay.addEventListener('pointercancel', endDrag);
   }
 
   // ---- Live panel: simulated connection loss / fallback ----
