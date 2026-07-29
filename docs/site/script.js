@@ -196,7 +196,10 @@
 
   makeGulfRenderer(document.getElementById('chart-canvas'), { contours: true, wind: true });
 
-  // ---- Ambient race strip (Live tab): closed-loop course, decorative ----
+  // ---- Live race broadcast (Live tab): aerial Gulf-of-Naples "stadium
+  // course" with two tacking boats, wake trails, and a sports-broadcast
+  // score-bug — modelled after America's Cup live-coverage graphics
+  // rather than the abstract loop-strip used elsewhere on the page. ----
   var raceCanvas = document.getElementById('raceCanvas');
   if (raceCanvas) {
     var rctx = raceCanvas.getContext('2d');
@@ -211,40 +214,330 @@
     window.addEventListener('resize', raceResize);
     raceResize();
 
-    function drawRace(time) {
-      rctx.clearRect(0, 0, rw, rh);
-      var grad = rctx.createLinearGradient(0, 0, 0, rh);
-      grad.addColorStop(0, '#0d1c20');
-      grad.addColorStop(1, '#132a30');
-      rctx.fillStyle = grad;
-      rctx.fillRect(0, 0, rw, rh);
-
-      var loopCx = rw * 0.5, loopCy = rh * 0.55, loopRx = rw * 0.42, loopRy = rh * 0.32;
+    // Stylised Posillipo headland (left) curving into the Naples waterfront,
+    // with Vesuvius rising hazy on the far shore — recognisable silhouette
+    // of the Gulf as seen from a broadcast drone over the course, not a
+    // literal chart.
+    function drawShore(t) {
+      var baseY = rh * 0.90;
+      rctx.save();
       rctx.beginPath();
-      rctx.ellipse(loopCx, loopCy, loopRx, loopRy, 0, 0, Math.PI * 2);
-      rctx.setLineDash([2, 6]);
-      rctx.strokeStyle = 'rgba(220,190,120,0.4)';
+      rctx.moveTo(-4, rh + 4);
+      rctx.lineTo(-4, baseY + rh * 0.05);
+      rctx.bezierCurveTo(rw * 0.08, baseY - rh * 0.10, rw * 0.14, baseY + rh * 0.06, rw * 0.22, baseY - rh * 0.02);
+      rctx.bezierCurveTo(rw * 0.34, baseY - rh * 0.09, rw * 0.46, baseY + rh * 0.04, rw * 0.60, baseY + rh * 0.02);
+      rctx.bezierCurveTo(rw * 0.74, baseY, rw * 0.86, baseY + rh * 0.05, rw + 4, baseY - rh * 0.01);
+      rctx.lineTo(rw + 4, rh + 4);
+      rctx.closePath();
+      var shoreGrad = rctx.createLinearGradient(0, baseY - rh * 0.1, 0, rh);
+      shoreGrad.addColorStop(0, '#1c2f22');
+      shoreGrad.addColorStop(1, '#0e1a14');
+      rctx.fillStyle = shoreGrad;
+      rctx.fill();
+      rctx.strokeStyle = 'rgba(200,155,60,0.35)';
       rctx.lineWidth = 1;
+      rctx.stroke();
+
+      // A handful of tiny waterfront-building silhouettes for texture.
+      rctx.fillStyle = 'rgba(10,18,14,0.9)';
+      for (var i = 0; i < 9; i++) {
+        var bx = rw * (0.06 + i * 0.1) + Math.sin(i * 2.1) * 4;
+        var by = baseY - rh * 0.02 + Math.sin(i * 1.3) * rh * 0.02;
+        var bwd = 5 + (i % 3) * 2, bht = 4 + (i % 4) * 2.4;
+        rctx.fillRect(bx, by - bht, bwd, bht);
+      }
+      rctx.restore();
+
+      // Vesuvius: hazy double-peak silhouette across the bay.
+      rctx.save();
+      rctx.globalAlpha = 0.32;
+      rctx.fillStyle = '#3a4a44';
+      rctx.beginPath();
+      rctx.moveTo(rw * 0.78, baseY - rh * 0.02);
+      rctx.lineTo(rw * 0.835, rh * 0.30);
+      rctx.lineTo(rw * 0.855, rh * 0.36);
+      rctx.lineTo(rw * 0.90, rh * 0.20);
+      rctx.lineTo(rw * 0.95, baseY - rh * 0.02);
+      rctx.closePath();
+      rctx.fill();
+      rctx.restore();
+    }
+
+    // Soft moving glints on the water surface for a "live aerial video"
+    // feel instead of a flat fill — cheap and reduced-motion safe.
+    function drawWaterGlints(time) {
+      rctx.save();
+      rctx.globalCompositeOperation = 'lighter';
+      var n = 5;
+      for (var i = 0; i < n; i++) {
+        var seedT = reduceMotion ? 0 : time;
+        var gx = ((i * 137 + seedT * 0.012) % (rw + 160)) - 80;
+        var gy = rh * (0.12 + (i * 0.61 % 1) * 0.55);
+        var glintGrad = rctx.createRadialGradient(gx, gy, 0, gx, gy, 46);
+        glintGrad.addColorStop(0, 'rgba(140,200,200,0.10)');
+        glintGrad.addColorStop(1, 'rgba(140,200,200,0)');
+        rctx.fillStyle = glintGrad;
+        rctx.beginPath();
+        rctx.ellipse(gx, gy, 46, 14, -0.25, 0, Math.PI * 2);
+        rctx.fill();
+      }
+      rctx.restore();
+    }
+
+    // ---- Course geometry: a modern "stadium racing" box — start/finish
+    // line near the shore, a leeward gate mid-course, a single windward
+    // mark, boundary lines either side. ----
+    function courseGeo() {
+      return {
+        startX1: rw * 0.30, startX2: rw * 0.62, startY: rh * 0.80,
+        gateX1: rw * 0.40, gateX2: rw * 0.54, gateY: rh * 0.50,
+        markX: rw * 0.50, markY: rh * 0.16,
+        boundaryTopL: rw * 0.14, boundaryTopR: rw * 0.86,
+        boundaryBotL: rw * 0.02, boundaryBotR: rw * 0.98
+      };
+    }
+
+    function drawCourse(geo) {
+      rctx.save();
+      // Boundary lines (course limits), lightly bowed for perspective.
+      rctx.setLineDash([1, 5]);
+      rctx.strokeStyle = 'rgba(224,189,109,0.28)';
+      rctx.lineWidth = 1;
+      rctx.beginPath();
+      rctx.moveTo(geo.boundaryBotL, rh * 0.92);
+      rctx.quadraticCurveTo(rw * 0.06, rh * 0.5, geo.boundaryTopL, rh * 0.08);
+      rctx.stroke();
+      rctx.beginPath();
+      rctx.moveTo(geo.boundaryBotR, rh * 0.92);
+      rctx.quadraticCurveTo(rw * 0.94, rh * 0.5, geo.boundaryTopR, rh * 0.08);
       rctx.stroke();
       rctx.setLineDash([]);
 
-      var angle = reduceMotion ? 1.4 : ((time / 7000) % 1) * Math.PI * 2;
-      var bx = loopCx + loopRx * Math.cos(angle);
-      var by = loopCy + loopRy * Math.sin(angle);
+      // Start / finish line.
+      rctx.strokeStyle = 'rgba(224,189,109,0.55)';
+      rctx.lineWidth = 1.2;
+      rctx.beginPath();
+      rctx.moveTo(geo.startX1, geo.startY);
+      rctx.lineTo(geo.startX2, geo.startY);
+      rctx.stroke();
+      drawMark(geo.startX1, geo.startY, '#e0bd6d');
+      drawMark(geo.startX2, geo.startY, '#e0bd6d');
 
+      // Leeward gate.
+      drawMark(geo.gateX1, geo.gateY, '#7fb2b8');
+      drawMark(geo.gateX2, geo.gateY, '#7fb2b8');
+
+      // Windward mark.
+      rctx.save();
+      rctx.translate(geo.markX, geo.markY);
+      rctx.rotate(Math.PI / 4);
+      rctx.fillStyle = '#e0654f';
+      rctx.fillRect(-4, -4, 8, 8);
+      rctx.restore();
+
+      rctx.font = '600 8px -apple-system, sans-serif';
+      rctx.fillStyle = 'rgba(234,243,241,0.55)';
+      rctx.textAlign = 'center';
+      rctx.fillText('BOA 3', geo.markX, geo.markY - 10);
+      rctx.textAlign = 'left';
+      rctx.restore();
+    }
+
+    function drawMark(x, y, color) {
       rctx.beginPath();
-      rctx.arc(bx, by, 9, 0, Math.PI * 2);
-      rctx.fillStyle = 'rgba(224,189,109,0.16)';
+      rctx.arc(x, y, 3, 0, Math.PI * 2);
+      rctx.fillStyle = color;
       rctx.fill();
+    }
+
+    // ---- Boats: parametric progress around the stadium course with a
+    // tacking zig-zag on the upwind leg and a gybing zig-zag downwind,
+    // so the motion reads as sailing rather than circling. ----
+    var LOOP_MS = 15000;
+    var boatDefs = [
+      { id: 'A', color: '#e0654f', tacks: 5, amp: 0.115, phase: 0, speedBase: 18.4, speedSwing: 1.1 },
+      { id: 'B', color: '#4f8fe0', tacks: 4, amp: 0.10, phase: 0.5, speedBase: 17.6, speedSwing: 0.9 }
+    ];
+    var trails = { A: [], B: [] };
+    var latestStats = { leaderId: 'A', speedA: 18.4, speedB: 17.6, gapSeconds: 4.2 };
+
+    function triangleWave(u) {
+      var f = u - Math.floor(u);
+      return 2 * Math.abs(2 * (f - Math.floor(f + 0.5))) - 1;
+    }
+
+    function boatPosition(geo, def, tRace) {
+      // tRace in [0,1): 0..0.5 upwind (start -> mark), 0.5..1 downwind (mark -> gate -> start).
+      var upwind = tRace < 0.5;
+      var legT = upwind ? (tRace / 0.5) : ((tRace - 0.5) / 0.5);
+      var fromX = upwind ? (geo.startX1 + geo.startX2) / 2 : geo.markX;
+      var fromY = upwind ? geo.startY : geo.markY;
+      var toX = upwind ? geo.markX : (geo.startX1 + geo.startX2) / 2;
+      var toY = upwind ? geo.markY : geo.startY;
+
+      var baseX = fromX + (toX - fromX) * legT;
+      var baseY = fromY + (toY - fromY) * legT;
+
+      var tackCount = upwind ? def.tacks : def.tacks - 1;
+      var zig = triangleWave(legT * tackCount + def.phase);
+      // Fade the zig-zag amplitude in/out at each leg's ends so boats don't
+      // snap sideways right at the marks.
+      var edgeFade = Math.min(1, legT * 5) * Math.min(1, (1 - legT) * 5);
+      var lateral = zig * rw * def.amp * edgeFade;
+
+      var x = baseX + lateral;
+      var y = baseY;
+      return { x: x, y: y, legT: legT, upwind: upwind };
+    }
+
+    function drawBoat(pos, prevPos, color, isLeader) {
+      var heading = Math.atan2(pos.y - prevPos.y, pos.x - prevPos.x);
+      rctx.save();
+      rctx.translate(pos.x, pos.y);
+      rctx.rotate(heading + Math.PI / 2);
+
+      // Wake wash.
       rctx.beginPath();
-      rctx.arc(bx, by, 4.5, 0, Math.PI * 2);
-      rctx.fillStyle = '#e0bd6d';
+      rctx.moveTo(0, 3);
+      rctx.lineTo(-3.4, 11);
+      rctx.lineTo(3.4, 11);
+      rctx.closePath();
+      rctx.fillStyle = 'rgba(220,235,235,0.22)';
       rctx.fill();
+
+      // Hull.
+      rctx.beginPath();
+      rctx.moveTo(0, -7.5);
+      rctx.lineTo(-2.6, 6.5);
+      rctx.lineTo(2.6, 6.5);
+      rctx.closePath();
+      rctx.fillStyle = color;
+      rctx.fill();
+
+      // Wingsail.
+      rctx.beginPath();
+      rctx.moveTo(0, -9);
+      rctx.lineTo(0, 4);
+      rctx.lineTo(4.6, 1.5);
+      rctx.closePath();
+      rctx.fillStyle = 'rgba(255,255,255,0.88)';
+      rctx.fill();
+
+      rctx.restore();
+
+      if (isLeader) {
+        rctx.save();
+        rctx.beginPath();
+        rctx.arc(pos.x, pos.y, 12, 0, Math.PI * 2);
+        rctx.strokeStyle = 'rgba(224,189,109,0.5)';
+        rctx.lineWidth = 1;
+        rctx.stroke();
+        rctx.restore();
+      }
+    }
+
+    function drawWake(points, color) {
+      if (points.length < 2) return;
+      rctx.save();
+      for (var i = 1; i < points.length; i++) {
+        var a = points[i - 1], b = points[i];
+        var alpha = (i / points.length) * 0.35;
+        rctx.beginPath();
+        rctx.moveTo(a.x, a.y);
+        rctx.lineTo(b.x, b.y);
+        rctx.strokeStyle = color;
+        rctx.globalAlpha = alpha;
+        rctx.lineWidth = 1.6 * (i / points.length);
+        rctx.stroke();
+      }
+      rctx.restore();
+    }
+
+    function updateHud() {
+      var boatASpeedEl = document.getElementById('boatASpeed');
+      var boatBSpeedEl = document.getElementById('boatBSpeed');
+      var boatGapEl = document.getElementById('boatGap');
+      var rowA = document.getElementById('boatRowA');
+      var rowB = document.getElementById('boatRowB');
+      if (boatASpeedEl) boatASpeedEl.innerHTML = latestStats.speedA.toFixed(1) + ' <small>kn</small>';
+      if (boatBSpeedEl) boatBSpeedEl.innerHTML = latestStats.speedB.toFixed(1) + ' <small>kn</small>';
+      if (boatGapEl) boatGapEl.textContent = '+' + latestStats.gapSeconds.toFixed(1) + 's';
+      if (rowA && rowB) {
+        var aLeads = latestStats.leaderId === 'A';
+        rowA.classList.toggle('leader', aLeads);
+        rowB.classList.toggle('leader', !aLeads);
+        rowA.querySelector('.team-badge').textContent = aLeads ? '1°' : '2°';
+        rowB.querySelector('.team-badge').textContent = aLeads ? '2°' : '1°';
+        rowA.querySelector('.team-gap').textContent = aLeads ? 'Leader' : ('+' + latestStats.gapSeconds.toFixed(1) + 's');
+        rowB.querySelector('.team-gap').textContent = !aLeads ? 'Leader' : ('+' + latestStats.gapSeconds.toFixed(1) + 's');
+      }
+    }
+    var hudTimer = setInterval(updateHud, 450);
+
+    var windArrowEl = document.getElementById('windArrow');
+    var windSpeedEl = document.getElementById('windSpeed');
+
+    function drawRace(time) {
+      var geo = courseGeo();
+      rctx.clearRect(0, 0, rw, rh);
+
+      var waterGrad = rctx.createLinearGradient(0, 0, 0, rh);
+      waterGrad.addColorStop(0, '#123840');
+      waterGrad.addColorStop(0.55, '#0e2a30');
+      waterGrad.addColorStop(1, '#0a1c20');
+      rctx.fillStyle = waterGrad;
+      rctx.fillRect(0, 0, rw, rh);
+
+      drawWaterGlints(time);
+      drawShore(time);
+      drawCourse(geo);
+
+      var tGlobal = reduceMotion ? 0.3 : (time / LOOP_MS) % 1;
+
+      boatDefs.forEach(function (def) {
+        var tBoat = (tGlobal + def.phase * 0.02) % 1;
+        var pos = boatPosition(geo, def, tBoat);
+        var prevT = (tBoat - 0.008 + 1) % 1;
+        var prevPos = boatPosition(geo, def, prevT);
+
+        var list = trails[def.id];
+        list.push({ x: pos.x, y: pos.y });
+        if (list.length > 16) list.shift();
+
+        var speed = def.speedBase + Math.sin(time / 2600 + def.phase * 6) * def.speedSwing;
+        if (def.id === 'A') latestStats.speedA = speed; else latestStats.speedB = speed;
+      });
+
+      // Leader = whichever boat is further along the combined leg progress.
+      var tA = (tGlobal + boatDefs[0].phase * 0.02) % 1;
+      var tB = (tGlobal + boatDefs[1].phase * 0.02) % 1;
+      latestStats.leaderId = tA >= tB ? 'A' : 'B';
+      latestStats.gapSeconds = 2.4 + Math.abs(Math.sin(time / 5200)) * 5.2;
+
+      boatDefs.forEach(function (def) {
+        drawWake(trails[def.id], def.color);
+      });
+
+      boatDefs.forEach(function (def) {
+        var tBoat = (tGlobal + def.phase * 0.02) % 1;
+        var pos = boatPosition(geo, def, tBoat);
+        var prevT = (tBoat - 0.02 + 1) % 1;
+        var prevPos = boatPosition(geo, def, prevT);
+        drawBoat(pos, prevPos, def.color, latestStats.leaderId === def.id);
+      });
+
+      if (windArrowEl && !reduceMotion) {
+        windArrowEl.style.transform = 'rotate(' + (18 + Math.sin(time / 4200) * 8) + 'deg)';
+      }
+      if (windSpeedEl) {
+        var windKn = 13.5 + Math.sin(time / 6000) * 1.4;
+        windSpeedEl.textContent = windKn.toFixed(0) + ' kn';
+      }
 
       if (!reduceMotion) requestAnimationFrame(drawRace);
     }
     requestAnimationFrame(drawRace);
-    if (reduceMotion) drawRace(0);
+    if (reduceMotion) { drawRace(300); updateHud(); }
   }
 
   // ---- Map canvas (Mappa tab): stylized Gulf of Naples chart with pinned
@@ -624,8 +917,8 @@
     // ---- Bottom sheet: draggable between peek and expanded ----
     var sheetHandle = document.getElementById('sheetHandle');
     if (mapSheet && sheetHandle) {
-      var COLLAPSED_Y = 280;
-      var EXPANDED_Y = 30;
+      var COLLAPSED_Y = 260;
+      var EXPANDED_Y = 10;
       var dragStartY = 0;
       var dragStartTranslate = COLLAPSED_Y;
       var dragging = false;
