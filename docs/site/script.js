@@ -210,6 +210,10 @@
       rw = rect.width; rh = rect.height;
       raceCanvas.width = rw * rDpr; raceCanvas.height = rh * rDpr;
       rctx.setTransform(rDpr, 0, 0, rDpr, 0, 0);
+      // With prefers-reduced-motion the render loop isn't continuously
+      // running, so a resize (e.g. switching to this tab) needs to force
+      // one fresh frame at the newly-measured size.
+      if (reduceMotion && rw > 0 && rh > 0) requestAnimationFrame(drawRace);
     }
     window.addEventListener('resize', raceResize);
     raceResize();
@@ -453,6 +457,8 @@
       rctx.restore();
     }
 
+    var prevLeaderId = null;
+
     function updateHud() {
       var boatASpeedEl = document.getElementById('boatASpeed');
       var boatBSpeedEl = document.getElementById('boatBSpeed');
@@ -470,6 +476,18 @@
         rowB.querySelector('.team-badge').textContent = aLeads ? '2°' : '1°';
         rowA.querySelector('.team-gap').textContent = aLeads ? 'Leader' : ('+' + latestStats.gapSeconds.toFixed(1) + 's');
         rowB.querySelector('.team-gap').textContent = !aLeads ? 'Leader' : ('+' + latestStats.gapSeconds.toFixed(1) + 's');
+
+        // A change of lead is the one moment worth calling out visually —
+        // a brief gold wash on the row that just took over, not a silent
+        // badge swap.
+        if (prevLeaderId !== null && prevLeaderId !== latestStats.leaderId) {
+          var newLeaderRow = aLeads ? rowA : rowB;
+          [rowA, rowB].forEach(function (row) { row.classList.remove('lead-change'); });
+          void newLeaderRow.offsetWidth;
+          newLeaderRow.classList.add('lead-change');
+          setTimeout(function () { newLeaderRow.classList.remove('lead-change'); }, 900);
+        }
+        prevLeaderId = latestStats.leaderId;
       }
     }
     var hudTimer = setInterval(updateHud, 450);
@@ -543,8 +561,8 @@
   // ---- Map canvas (Mappa tab): stylized Gulf of Naples chart with pinned
   // markers for viewpoints and race buoys, in chart or satellite style ----
   var mapCanvas = document.getElementById('mapCanvas');
-  var mapPanel = document.getElementById('mapPanel');
-  if (mapCanvas && mapPanel) {
+  var mapStage = document.getElementById('mapStage');
+  if (mapCanvas && mapStage) {
     var mctx = mapCanvas.getContext('2d');
     var mDpr = Math.min(window.devicePixelRatio || 1, 2);
     var mw, mh;
@@ -553,10 +571,11 @@
     var lastFrameTime = 0;
 
     function mapResize() {
-      var rect = mapPanel.getBoundingClientRect();
+      var rect = mapStage.getBoundingClientRect();
       mw = rect.width; mh = rect.height;
       mapCanvas.width = mw * mDpr; mapCanvas.height = mh * mDpr;
       mctx.setTransform(mDpr, 0, 0, mDpr, 0, 0);
+      if (reduceMotion && mw > 0 && mh > 0) requestAnimationFrame(drawMap);
     }
     window.addEventListener('resize', mapResize);
     mapResize();
@@ -581,40 +600,142 @@
     }
 
     var VANTAGE_POINTS = [
-      { id: 'castel-ovo', x: 0.42, drop: 0.07 },
-      { id: 'pizzofalcone', x: 0.66, drop: 0.05 },
-      { id: 'posillipo', x: 0.22, drop: 0.09 },
-      { id: 'mergellina', x: 0.32, drop: 0.06 }
+      { id: 'castel-ovo', x: 0.42, drop: 0.07, crowd: 'low', strategic: true },
+      { id: 'pizzofalcone', x: 0.66, drop: 0.05, crowd: 'low' },
+      { id: 'posillipo', x: 0.22, drop: 0.09, crowd: 'high' },
+      { id: 'mergellina', x: 0.32, drop: 0.06, crowd: 'low' }
     ];
+    var CROWD_COLORS = { low: '#5fb87c', medium: '#e0a83c', high: '#c1473b' };
     var BUOY_ANGLES = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
     var activeMarkerId = null;
     var visibleIds = null; // null = all visible
+
+    // Camera: eases toward whichever vantage point is selected so tapping a
+    // pin (canvas or list) visibly pans/zooms the map there, Apple-Maps
+    // style, instead of only changing a highlight.
+    var camX = 0, camY = 0, camZoom = 1, cameraPrimed = false;
 
     function markerAnchor(vp) {
       return { x: mw * vp.x, y: mh * (coastY(vp.x) + vp.drop) };
     }
 
-    function drawPin(ctx, x, y, headR, color) {
-      var headCy = y - 9;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x - headR * 0.55, headCy + headR * 0.3);
-      ctx.lineTo(x + headR * 0.55, headCy + headR * 0.3);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x, headCy, headR, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.lineWidth = 1.2;
-      ctx.strokeStyle = 'rgba(10,20,23,0.85)';
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(x, headCy, headR * 0.36, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(10,20,23,0.9)';
-      ctx.fill();
-      return headCy;
+    var CURRENT_COLOR = '#e0bd6d';
+
+    function drawVantagePin(vp, anchor, isActive, isHovered, time) {
+      var isVisible = !visibleIds || visibleIds.indexOf(vp.id) !== -1;
+      mctx.globalAlpha = isVisible ? 1 : 0.28;
+
+      var headCy = anchor.y - 9;
+
+      // A live crowd-level change just landed on this pin — ping it with
+      // an expanding ring instead of silently recolouring.
+      var pulseStart = pinPulses[vp.id];
+      if (pulseStart !== undefined) {
+        var pulseT = (time - pulseStart) / 900;
+        if (pulseT >= 1) {
+          delete pinPulses[vp.id];
+        } else {
+          mctx.beginPath();
+          mctx.arc(anchor.x, headCy, 7 + pulseT * 16, 0, Math.PI * 2);
+          mctx.lineWidth = 2;
+          mctx.strokeStyle = 'rgba(224,189,109,' + (0.55 * (1 - pulseT)) + ')';
+          mctx.stroke();
+        }
+      }
+
+      // Ambient halo marking this as your current saved vantage point —
+      // present regardless of selection, so it always reads as "yours".
+      if (vp.strategic) {
+        mctx.beginPath();
+        mctx.arc(anchor.x, headCy, 14, 0, Math.PI * 2);
+        mctx.fillStyle = 'rgba(224,189,109,0.16)';
+        mctx.fill();
+      }
+
+      var headR = isActive ? 8.2 : 6.4;
+      // Colour encodes status: gold = your current point, otherwise green
+      // (poco affollato / migliore visuale), amber (nella media) or red
+      // (affollato) — the same read as the crowd dot in the list below.
+      var color = vp.strategic ? CURRENT_COLOR : (CROWD_COLORS[vp.crowd] || CROWD_COLORS.low);
+
+      mctx.beginPath();
+      mctx.moveTo(anchor.x, anchor.y);
+      mctx.lineTo(anchor.x - headR * 0.55, headCy + headR * 0.3);
+      mctx.lineTo(anchor.x + headR * 0.55, headCy + headR * 0.3);
+      mctx.closePath();
+      mctx.fillStyle = color;
+      mctx.fill();
+      mctx.beginPath();
+      mctx.arc(anchor.x, headCy, headR, 0, Math.PI * 2);
+      mctx.fillStyle = color;
+      mctx.fill();
+      mctx.lineWidth = 1.2;
+      mctx.strokeStyle = 'rgba(10,20,23,0.85)';
+      mctx.stroke();
+      mctx.beginPath();
+      mctx.arc(anchor.x, headCy, headR * 0.36, 0, Math.PI * 2);
+      mctx.fillStyle = 'rgba(10,20,23,0.9)';
+      mctx.fill();
+
+      // Selection ring — whichever pin was just tapped, independent of its
+      // status colour.
+      if (isActive) {
+        mctx.beginPath();
+        mctx.arc(anchor.x, headCy, headR + 3.4, 0, Math.PI * 2);
+        mctx.lineWidth = 1.6;
+        mctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        mctx.stroke();
+      } else if (isHovered) {
+        // Lighter preview ring for a hovered-but-not-selected pin, synced
+        // with the corresponding card in the dock below.
+        mctx.beginPath();
+        mctx.arc(anchor.x, headCy, headR + 3, 0, Math.PI * 2);
+        mctx.lineWidth = 1.4;
+        mctx.strokeStyle = 'rgba(255,255,255,0.45)';
+        mctx.stroke();
+      }
+
+      mctx.globalAlpha = 1;
+    }
+
+    // Translucent wedge from a vantage point toward the race course — the
+    // product's core claim made visible: this spot has a clear line of
+    // sight to where the action is happening right now.
+    function drawSightlineCone(vp, target) {
+      var anchor = markerAnchor(vp);
+      var originX = anchor.x, originY = anchor.y - 9;
+      var dx = target.x - originX, dy = target.y - originY;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var angle = Math.atan2(dy, dx);
+      var spread = 0.20;
+      var coneGrad = mctx.createLinearGradient(originX, originY, target.x, target.y);
+      coneGrad.addColorStop(0, 'rgba(224,189,109,0.30)');
+      coneGrad.addColorStop(1, 'rgba(224,189,109,0)');
+      mctx.beginPath();
+      mctx.moveTo(originX, originY);
+      mctx.lineTo(originX + Math.cos(angle - spread) * dist, originY + Math.sin(angle - spread) * dist);
+      mctx.lineTo(originX + Math.cos(angle + spread) * dist, originY + Math.sin(angle + spread) * dist);
+      mctx.closePath();
+      mctx.fillStyle = coneGrad;
+      mctx.fill();
+    }
+
+    // "La tua posizione" — a pulsing location dot in the Apple/Google Maps
+    // blue-dot convention, kept visually distinct from the amber vantage pins.
+    function drawUserLocation(time) {
+      var ux = mw * 0.52, uy = mh * (coastY(0.52) + 0.115);
+      var pulse = reduceMotion ? 0.5 : (0.5 + 0.5 * Math.sin(time / 750));
+      mctx.beginPath();
+      mctx.arc(ux, uy, 13 + pulse * 6, 0, Math.PI * 2);
+      mctx.fillStyle = 'rgba(79,143,224,' + (0.22 - pulse * 0.08) + ')';
+      mctx.fill();
+      mctx.beginPath();
+      mctx.arc(ux, uy, 6, 0, Math.PI * 2);
+      mctx.fillStyle = '#4f8fe0';
+      mctx.fill();
+      mctx.lineWidth = 2;
+      mctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      mctx.stroke();
     }
 
     function ensureSatTexture(w, h) {
@@ -648,37 +769,47 @@
 
       mctx.clearRect(0, 0, mw, mh);
 
-      var waterTop = lerpColor('#0d2126', '#0e1a1f', layerMix);
-      var waterBottom = lerpColor('#153138', '#132a30', layerMix);
+      // Camera: ease toward the selected vantage point (or the resting
+      // centre when none is selected) so tapping a pin visibly pans/zooms
+      // the map there rather than only swapping a highlight colour.
+      if (mw > 0 && mh > 0) {
+        var camTargetX = mw / 2, camTargetY = mh * 0.42, camTargetZoom = 1;
+        var focusVp = activeMarkerId
+          ? VANTAGE_POINTS.filter(function (v) { return v.id === activeMarkerId; })[0]
+          : null;
+        if (focusVp) {
+          var focusAnchor = markerAnchor(focusVp);
+          camTargetX = focusAnchor.x;
+          camTargetY = focusAnchor.y - 9;
+          camTargetZoom = 1.5;
+        }
+        if (!cameraPrimed) {
+          camX = camTargetX; camY = camTargetY; camZoom = camTargetZoom;
+          cameraPrimed = true;
+        } else {
+          camX += (camTargetX - camX) * 0.09;
+          camY += (camTargetY - camY) * 0.09;
+          camZoom += (camTargetZoom - camZoom) * 0.09;
+        }
+      }
+      mctx.save();
+      mctx.translate(mw / 2, mh / 2);
+      mctx.scale(camZoom, camZoom);
+      mctx.translate(-camX, -camY);
+
+      var waterTop = lerpColor('#123039', '#0e1a1f', layerMix);
+      var waterBottom = lerpColor('#0a1f26', '#132a30', layerMix);
       var coastStroke = lerpColor('#c89b3c', '#b4be96', layerMix);
-      var contourStroke = '60,110,118';
 
       var grad = mctx.createLinearGradient(0, 0, 0, mh);
       grad.addColorStop(0, waterTop);
       grad.addColorStop(1, waterBottom);
       mctx.fillStyle = grad;
-      mctx.fillRect(0, 0, mw, mh);
-
-      if (chartAlpha > 0.01) {
-        mctx.save();
-        mctx.globalAlpha = chartAlpha;
-        for (var c = 0; c < 4; c++) {
-          mctx.beginPath();
-          for (var x = -0.05 * mw; x <= 1.05 * mw; x += 8) {
-            var xn = x / mw;
-            var y = coastY(xn) * mh - (c + 1) * (mh * 0.055);
-            if (x === -0.05 * mw) mctx.moveTo(x, y); else mctx.lineTo(x, y);
-          }
-          mctx.strokeStyle = 'rgba(' + contourStroke + ',' + (0.4 - c * 0.08) + ')';
-          mctx.lineWidth = 1;
-          mctx.stroke();
-        }
-        mctx.font = '9px -apple-system, sans-serif';
-        mctx.fillStyle = 'rgba(150,195,195,0.5)';
-        mctx.fillText('-8 m', mw * 0.18, coastY(0.18) * mh - mh * 0.11);
-        mctx.fillText('-22 m', mw * 0.62, coastY(0.62) * mh - mh * 0.16);
-        mctx.restore();
-      }
+      // Oversized on purpose: once the camera pans/zooms toward an
+      // edge vantage point, the visible world window can extend past the
+      // nominal (0,0,mw,mh) map extent — this keeps water under it instead
+      // of exposing empty canvas.
+      mctx.fillRect(-mw, -mh, mw * 3, mh * 3);
 
       // Vesuvius, hazy, across the bay — same in both layer modes.
       mctx.save();
@@ -708,7 +839,7 @@
       if (chartAlpha > 0.01) {
         mctx.save();
         mctx.globalAlpha = chartAlpha;
-        mctx.fillStyle = 'rgba(22,40,46,0.95)';
+        mctx.fillStyle = 'rgba(32,31,27,0.96)';
         mctx.fill(landPath);
         mctx.restore();
       }
@@ -722,6 +853,57 @@
       mctx.strokeStyle = coastStroke;
       mctx.lineWidth = 1.3;
       mctx.stroke(landPath);
+
+      // Vector street-map detail: city block grid, the coastal avenue, a
+      // park patch and place labels — a real navigation-map read, not a
+      // hand-drawn chart. Fades out under the satellite layer.
+      if (chartAlpha > 0.01) {
+        mctx.save();
+        mctx.globalAlpha = chartAlpha;
+        mctx.clip(landPath);
+
+        mctx.save();
+        mctx.globalAlpha *= 0.55;
+        mctx.translate(mw * 0.5, coastY(0.5) * mh + mh * 0.08);
+        mctx.rotate(-0.1);
+        mctx.strokeStyle = 'rgba(255,255,255,0.07)';
+        mctx.lineWidth = 1;
+        var gridSize = 15;
+        for (var gx = -mw * 1.3; gx <= mw * 1.3; gx += gridSize) {
+          mctx.beginPath(); mctx.moveTo(gx, -mh); mctx.lineTo(gx, mh * 1.3); mctx.stroke();
+        }
+        for (var gy = -mh * 0.3; gy <= mh * 1.3; gy += gridSize) {
+          mctx.beginPath(); mctx.moveTo(-mw * 1.3, gy); mctx.lineTo(mw * 1.3, gy); mctx.stroke();
+        }
+        mctx.restore();
+
+        mctx.strokeStyle = 'rgba(240,225,190,0.42)';
+        mctx.lineWidth = 2.2;
+        mctx.beginPath();
+        for (var xg = -0.05 * mw; xg <= 1.05 * mw; xg += 8) {
+          var xgn = xg / mw;
+          var yg = coastY(xgn) * mh - mh * 0.018;
+          if (xg === -0.05 * mw) mctx.moveTo(xg, yg); else mctx.lineTo(xg, yg);
+        }
+        mctx.stroke();
+
+        mctx.fillStyle = 'rgba(88,128,86,0.55)';
+        mctx.beginPath();
+        mctx.ellipse(mw * 0.46, coastY(0.46) * mh - mh * 0.05, mw * 0.05, mh * 0.022, -0.12, 0, Math.PI * 2);
+        mctx.fill();
+
+        mctx.restore();
+
+        mctx.font = '600 8.5px -apple-system, sans-serif';
+        mctx.fillStyle = 'rgba(234,243,241,' + (0.78 * chartAlpha) + ')';
+        mctx.textAlign = 'center';
+        mctx.fillText('Posillipo', mw * 0.20, coastY(0.20) * mh - mh * 0.125);
+        mctx.fillText('Lungomare Caracciolo', mw * 0.5, coastY(0.5) * mh - mh * 0.085);
+        mctx.font = '600 8px -apple-system, sans-serif';
+        mctx.fillStyle = 'rgba(234,243,241,' + (0.55 * chartAlpha) + ')';
+        mctx.fillText('Vesuvio', mw * 0.885, mh * 0.34);
+        mctx.textAlign = 'left';
+      }
 
       // Regatta course: closed loop with buoys, boat circling continuously.
       var loopCx = mw * 0.56, loopCy = mh * 0.30, loopRx = mw * 0.30, loopRy = mh * 0.13;
@@ -752,51 +934,91 @@
       mctx.fillStyle = '#e0bd6d';
       mctx.fill();
 
-      // Vantage point pins.
+      // Line of sight from the selected (or top-ranked) vantage point to
+      // where the race actually is right now.
+      var coneVp = activeMarkerId
+        ? VANTAGE_POINTS.filter(function (v) { return v.id === activeMarkerId; })[0]
+        : null;
+      if (!coneVp) coneVp = VANTAGE_POINTS.filter(function (v) { return v.strategic; })[0];
+      if (coneVp) drawSightlineCone(coneVp, { x: boatX, y: boatY });
+
+      // Vantage point pins, each with a live crowd-level badge.
       VANTAGE_POINTS.forEach(function (vp) {
         var anchor = markerAnchor(vp);
-        var isActive = vp.id === activeMarkerId;
-        var isVisible = !visibleIds || visibleIds.indexOf(vp.id) !== -1;
-        mctx.globalAlpha = isVisible ? 1 : 0.25;
-
-        if (isActive) {
-          mctx.beginPath();
-          mctx.arc(anchor.x, anchor.y - 9, 15, 0, Math.PI * 2);
-          mctx.fillStyle = 'rgba(200,155,60,0.25)';
-          mctx.fill();
-        }
-        drawPin(mctx, anchor.x, anchor.y, isActive ? 8 : 6, isActive ? '#e0bd6d' : '#c89b3c');
-        mctx.globalAlpha = 1;
+        drawVantagePin(vp, anchor, vp.id === activeMarkerId, vp.id === hoverMarkerId, time);
       });
+
+      drawUserLocation(time);
+
+      mctx.restore();
+
+      // Keep the hover tooltip glued to its pin while the camera eases
+      // toward a selection.
+      if (hoverMarkerId) updateTooltip();
 
       requestAnimationFrame(drawMap);
     }
     requestAnimationFrame(drawMap);
 
     function hitTestMarker(px, py) {
+      // Pins are drawn in world space under the camera's pan/zoom
+      // transform, so a raw screen click has to be converted back to world
+      // coordinates the same way before comparing against pin positions.
+      var worldX = (px - mw / 2) / camZoom + camX;
+      var worldY = (py - mh / 2) / camZoom + camY;
       for (var i = 0; i < VANTAGE_POINTS.length; i++) {
         var anchor = markerAnchor(VANTAGE_POINTS[i]);
-        var dx = anchor.x - px, dy = (anchor.y - 9) - py;
+        var dx = anchor.x - worldX, dy = (anchor.y - 9) - worldY;
         if (Math.sqrt(dx * dx + dy * dy) <= 15) return VANTAGE_POINTS[i].id;
       }
       return null;
     }
 
-    var sheetList = document.getElementById('sheetList');
-    var mapSheet = document.getElementById('mapSheet');
+    var mapCarousel = document.getElementById('mapCarousel');
+    var mapTooltip = document.getElementById('mapTooltip');
+    var hoverMarkerId = null;
 
     function selectMarker(id) {
       activeMarkerId = id;
-      if (sheetList) {
-        Array.prototype.slice.call(sheetList.querySelectorAll('.vp-row-i')).forEach(function (row) {
-          row.classList.toggle('active', row.getAttribute('data-id') === id);
+      if (mapCarousel) {
+        Array.prototype.slice.call(mapCarousel.querySelectorAll('.vp-card')).forEach(function (card) {
+          card.classList.toggle('active', card.getAttribute('data-id') === id);
         });
-        var target = sheetList.querySelector('.vp-row-i[data-id="' + id + '"]');
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          if (mapSheet) mapSheet.classList.add('expanded');
-        }
+        var target = mapCarousel.querySelector('.vp-card[data-id="' + id + '"]');
+        if (target) target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
+    }
+
+    function updateCardHoverClasses() {
+      if (!mapCarousel) return;
+      Array.prototype.slice.call(mapCarousel.querySelectorAll('.vp-card')).forEach(function (card) {
+        card.classList.toggle('hovered', card.getAttribute('data-id') === hoverMarkerId);
+      });
+    }
+
+    function updateTooltip() {
+      if (!mapTooltip) return;
+      var vp = hoverMarkerId ? VANTAGE_POINTS.filter(function (v) { return v.id === hoverMarkerId; })[0] : null;
+      if (!vp) { mapTooltip.hidden = true; return; }
+      var anchor = markerAnchor(vp);
+      var screenX = mw / 2 + (anchor.x - camX) * camZoom;
+      var screenY = mh / 2 + ((anchor.y - 9) - camY) * camZoom - 12;
+      var crowdLabel = vp.crowd === 'high' ? 'alta affluenza' : vp.crowd === 'medium' ? 'media affluenza' : 'bassa affluenza';
+      var name = vp.strategic ? 'Il tuo punto' : (vp.crowd === 'low' ? 'Consigliato' : vp.crowd === 'high' ? 'Affollato' : 'Nella media');
+      var card = mapCarousel ? mapCarousel.querySelector('.vp-card[data-id="' + vp.id + '"]') : null;
+      var displayName = card ? card.querySelector('.vp-card-name').textContent : vp.id;
+      mapTooltip.innerHTML = '<span class="tt-name">' + displayName + '</span>' +
+        '<span class="tt-meta"><span class="tt-dot" style="background:' + (vp.strategic ? CURRENT_COLOR : CROWD_COLORS[vp.crowd]) + '"></span>' + name + ' · ' + crowdLabel + '</span>';
+      mapTooltip.style.left = screenX + 'px';
+      mapTooltip.style.top = screenY + 'px';
+      mapTooltip.hidden = false;
+    }
+
+    function setHover(id) {
+      if (id === hoverMarkerId) return;
+      hoverMarkerId = id;
+      updateCardHoverClasses();
+      updateTooltip();
     }
 
     mapCanvas.addEventListener('click', function (e) {
@@ -804,11 +1026,23 @@
       var id = hitTestMarker(e.clientX - rect.left, e.clientY - rect.top);
       if (id) selectMarker(id);
     });
+    mapCanvas.addEventListener('mousemove', function (e) {
+      var rect = mapCanvas.getBoundingClientRect();
+      setHover(hitTestMarker(e.clientX - rect.left, e.clientY - rect.top));
+    });
+    mapCanvas.addEventListener('mouseleave', function () { setHover(null); });
 
-    if (sheetList) {
-      sheetList.addEventListener('click', function (e) {
-        var row = e.target.closest ? e.target.closest('.vp-row-i') : null;
-        if (row) selectMarker(row.getAttribute('data-id'));
+    if (mapCarousel) {
+      mapCarousel.addEventListener('click', function (e) {
+        var card = e.target.closest ? e.target.closest('.vp-card') : null;
+        if (card) selectMarker(card.getAttribute('data-id'));
+      });
+      Array.prototype.slice.call(mapCarousel.querySelectorAll('.vp-card')).forEach(function (card) {
+        var id = card.getAttribute('data-id');
+        card.addEventListener('mouseenter', function () { setHover(id); });
+        card.addEventListener('mouseleave', function () { if (hoverMarkerId === id) setHover(null); });
+        card.addEventListener('focus', function () { setHover(id); });
+        card.addEventListener('blur', function () { if (hoverMarkerId === id) setHover(null); });
       });
     }
 
@@ -821,23 +1055,52 @@
       var activeChip = mapChips ? mapChips.querySelector('.chip.active') : null;
       var filter = activeChip ? activeChip.getAttribute('data-filter') : 'all';
       var query = mapSearch ? mapSearch.value.trim().toLowerCase() : '';
-      var rows = sheetList ? Array.prototype.slice.call(sheetList.querySelectorAll('.vp-row-i')) : [];
+      var cards = mapCarousel ? Array.prototype.slice.call(mapCarousel.querySelectorAll('.vp-card')) : [];
       var visible = [];
 
-      rows.forEach(function (row) {
-        var tags = (row.getAttribute('data-tags') || '').split(/\s+/);
-        var name = row.querySelector('.name').textContent.toLowerCase();
+      cards.forEach(function (card) {
+        var tags = (card.getAttribute('data-tags') || '').split(/\s+/);
+        var name = card.querySelector('.vp-card-name').textContent.toLowerCase();
         var matchesFilter = filter === 'all' || tags.indexOf(filter) !== -1;
         var matchesQuery = !query || name.indexOf(query) !== -1;
         var show = matchesFilter && matchesQuery;
-        row.classList.toggle('hidden-by-filter', !show);
-        if (show) visible.push(row.getAttribute('data-id'));
+        card.classList.toggle('hidden-by-filter', !show);
+        if (show) visible.push(card.getAttribute('data-id'));
       });
 
       visibleIds = (filter === 'all' && !query) ? null : visible;
       if (sheetCount) sheetCount.textContent = visible.length + (visible.length === 1 ? ' vicino a te' : ' vicini a te');
       if (query && visible.length) selectMarker(visible[0]);
     }
+
+    // ---- Live crowd-level ticks: simulated crowdsourced updates every
+    // few seconds, reflected with a small flash on both the pin and its
+    // carousel card rather than a silent value swap. ----
+    var CROWD_CYCLE = { low: 'medium', medium: 'high', high: 'low' };
+    var CROWD_LABEL = { low: 'bassa affluenza', medium: 'media affluenza', high: 'alta affluenza' };
+    var pinPulses = {};
+
+    function tickCrowdLevels() {
+      var candidates = VANTAGE_POINTS.filter(function (v) { return !v.strategic; });
+      var vp = candidates[Math.floor(Math.random() * candidates.length)];
+      if (!vp) return;
+      vp.crowd = CROWD_CYCLE[vp.crowd] || 'low';
+      pinPulses[vp.id] = performance.now();
+
+      var card = mapCarousel ? mapCarousel.querySelector('.vp-card[data-id="' + vp.id + '"]') : null;
+      if (card) {
+        var dot = card.querySelector('.vp-card-crowd');
+        var text = card.querySelector('.vp-card-crowd-text');
+        if (dot) {
+          dot.classList.remove('low', 'medium', 'high', 'pulse');
+          void dot.offsetWidth; // restart the pulse animation
+          dot.classList.add(vp.crowd, 'pulse');
+        }
+        if (text) text.textContent = CROWD_LABEL[vp.crowd];
+      }
+      updateTooltip();
+    }
+    var crowdTickTimer = setInterval(tickCrowdLevels, 6500);
 
     var chipIndicator = document.getElementById('chipIndicator');
     if (mapChips) {
@@ -914,67 +1177,6 @@
       });
     }
 
-    // ---- Bottom sheet: draggable between peek and expanded ----
-    var sheetHandle = document.getElementById('sheetHandle');
-    if (mapSheet && sheetHandle) {
-      var COLLAPSED_Y = 260;
-      var EXPANDED_Y = 10;
-      var dragStartY = 0;
-      var dragStartTranslate = COLLAPSED_Y;
-      var dragging = false;
-
-      function currentTranslate() {
-        return mapSheet.classList.contains('expanded') ? EXPANDED_Y : COLLAPSED_Y;
-      }
-
-      function onPointerDown(e) {
-        dragging = true;
-        dragStartY = e.clientY;
-        dragStartTranslate = currentTranslate();
-        mapSheet.classList.add('dragging');
-        sheetHandle.setPointerCapture(e.pointerId);
-      }
-      function onPointerMove(e) {
-        if (!dragging) return;
-        var delta = e.clientY - dragStartY;
-        var next = Math.min(COLLAPSED_Y, Math.max(EXPANDED_Y, dragStartTranslate + delta));
-        mapSheet.style.transform = 'translateY(' + next + 'px)';
-      }
-      function onPointerUp(e) {
-        if (!dragging) return;
-        dragging = false;
-        mapSheet.classList.remove('dragging');
-        var moved = Math.abs(e.clientY - dragStartY);
-        mapSheet.style.transform = '';
-        if (moved < 6) {
-          mapSheet.classList.toggle('expanded');
-        } else {
-          var rect = mapSheet.getBoundingClientRect();
-          var midpoint = (COLLAPSED_Y + EXPANDED_Y) / 2;
-          var current = dragStartTranslate + (e.clientY - dragStartY);
-          mapSheet.classList.toggle('expanded', current < midpoint);
-        }
-        sheetHandle.setAttribute('aria-expanded', mapSheet.classList.contains('expanded') ? 'true' : 'false');
-      }
-
-      sheetHandle.addEventListener('pointerdown', onPointerDown);
-      sheetHandle.addEventListener('pointermove', onPointerMove);
-      sheetHandle.addEventListener('pointerup', onPointerUp);
-      sheetHandle.addEventListener('pointercancel', onPointerUp);
-    }
-
-    // ---- "Naviga" buttons inside the list ----
-    if (sheetList) {
-      Array.prototype.slice.call(sheetList.querySelectorAll('.nav-btn')).forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          btn.animate(
-            [{ transform: 'scale(1)' }, { transform: 'scale(0.8)' }, { transform: 'scale(1)' }],
-            { duration: 260, easing: 'ease' }
-          );
-        });
-      });
-    }
   }
 
   // ---- Phone demo: tab switching ----
@@ -987,13 +1189,19 @@
       if (!tab) return;
       tabs.forEach(function (t) { t.classList.toggle('active', t === tab); });
       panels.forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-panel') === name); });
+      // The race and map canvases size themselves from their panel's
+      // getBoundingClientRect() on window 'resize'. A panel hidden behind
+      // display:none at that first measurement reports a 0x0 rect and never
+      // gets a second chance — so re-fire 'resize' once its tab becomes
+      // visible to force both canvases to pick up their real dimensions.
+      window.dispatchEvent(new Event('resize'));
     }
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function () { goToTab(tab.getAttribute('data-panel')); });
     });
 
-    // ---- Live panel: link-cards jump straight into the module they surface ----
-    Array.prototype.slice.call(phone.querySelectorAll('.live-link-card')).forEach(function (card) {
+    // ---- Live-link / event cards jump straight into the module they surface ----
+    Array.prototype.slice.call(phone.querySelectorAll('.live-link-card, .event-card')).forEach(function (card) {
       card.addEventListener('click', function () { goToTab(card.getAttribute('data-goto')); });
     });
   }

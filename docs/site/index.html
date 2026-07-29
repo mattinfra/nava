@@ -27,6 +27,11 @@
     <symbol id="icon-tab-map" viewBox="0 0 24 24"><path d="M9 4 L4 6 V20 L9 18 L15 20 L20 18 V4 L15 6 L9 4Z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></symbol>
     <symbol id="icon-tab-game" viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="10" rx="5"/><line x1="7" y1="13" x2="7" y2="13" style="stroke-width:2.6"/><line x1="4.6" y1="13" x2="9.4" y2="13"/><line x1="7" y1="10.6" x2="7" y2="15.4"/><circle style="fill:currentColor;stroke:none" cx="15.5" cy="11.5" r="1.15"/><circle style="fill:currentColor;stroke:none" cx="18.2" cy="14.2" r="1.15"/></symbol>
     <symbol id="icon-wind-arrow" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="4"/><polyline points="6 10 12 4 18 10"/></symbol>
+    <symbol id="icon-tab-home" viewBox="0 0 24 24"><path d="M4 11.5 L12 4 L20 11.5"/><path d="M6 10 V20 H18 V10"/><line x1="10" y1="20" x2="10" y2="14.5"/><line x1="14" y1="20" x2="14" y2="14.5"/><line x1="10" y1="14.5" x2="14" y2="14.5"/></symbol>
+    <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M7 4 H17 V9 a5 5 0 0 1-10 0 V4Z"/><path d="M7 5.5 H4 a3 3 0 0 0 3 4.2"/><path d="M17 5.5 H20 a3 3 0 0 1-3 4.2"/><line x1="12" y1="14" x2="12" y2="17.5"/><path d="M8.5 20 H15.5 L14.5 17.5 H9.5 Z"/></symbol>
+    <symbol id="icon-crowd" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="2.6"/><circle cx="16" cy="9" r="2.1"/><path d="M3.5 19 c0-3.3 2.2-5.4 5-5.4 s5 2.1 5 5.4"/><path d="M14.2 19 c0-2.6 1.6-4.5 3.8-4.5 s3.5 1.6 3.5 4"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.4"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></symbol>
+    <symbol id="icon-navigation" viewBox="0 0 24 24"><path d="M12 3 L19 20 L12 16 L5 20 Z"/></symbol>
   </defs>
 </svg>
 
@@ -223,7 +228,85 @@
           </div>
         </div>
 
-        <div class="app-panel active" data-panel="live">
+        <div class="app-panel active" data-panel="home">
+          <div class="home-greeting">
+            <span class="home-avatar">M</span>
+            <span class="home-greeting-text">
+              <span class="home-hello">Ciao, Marco</span>
+              <span class="home-sub">Giorno 3 di regata · Golfo di Napoli</span>
+            </span>
+          </div>
+
+          <div class="stat-tiles">
+            <div class="stat-tile">
+              <svg class="icon"><use href="#icon-trophy"/></svg>
+              <span class="stat-value mono">1.180</span>
+              <span class="stat-label">Punti previsione</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-rank mono">2°</span>
+              <span class="stat-value mono">/ 340</span>
+              <span class="stat-label">Posizione classifica</span>
+            </div>
+            <div class="stat-tile">
+              <svg class="icon"><use href="#icon-tab-live"/></svg>
+              <span class="stat-value mono">7</span>
+              <span class="stat-label">Regate seguite</span>
+            </div>
+            <div class="stat-tile">
+              <svg class="icon"><use href="#icon-target"/></svg>
+              <span class="stat-value mono">4</span>
+              <span class="stat-label">Punti visitati</span>
+            </div>
+          </div>
+
+          <div class="home-section">
+            <h4>Prossimi eventi</h4>
+            <div class="event-card" data-goto="live">
+              <span class="event-date">
+                <span class="event-day mono">OGGI</span>
+                <span class="event-time mono">17:30</span>
+              </span>
+              <span class="event-body">
+                <span class="event-title">Regata 4 · Flotta A</span>
+                <span class="event-meta">Percorso costiero · Posillipo → Castel dell'Ovo</span>
+              </span>
+              <span class="event-countdown mono">tra 2h 14m</span>
+            </div>
+            <div class="event-card" data-goto="game">
+              <span class="event-date">
+                <span class="event-day mono">DOM</span>
+                <span class="event-time mono">10:00</span>
+              </span>
+              <span class="event-body">
+                <span class="event-title">Regata 5 · Flotta A</span>
+                <span class="event-meta">Prediction Game aperto 20 min prima</span>
+              </span>
+              <span class="event-countdown mono">domani</span>
+            </div>
+          </div>
+
+          <button class="live-link-card" type="button" data-goto="map">
+            <span class="live-link-icon"><svg class="icon"><use href="#icon-target"/></svg></span>
+            <span class="live-link-body">
+              <span class="live-link-label">Il tuo punto salvato</span>
+              <span class="live-link-title">Castel dell'Ovo <span class="score-chip">94</span></span>
+              <span class="live-link-meta">A 750 m da te — apri la mappa per il percorso</span>
+            </span>
+            <svg class="icon live-link-arrow"><use href="#icon-chevron-right"/></svg>
+          </button>
+
+          <div class="home-section">
+            <h4>Utile da sapere</h4>
+            <div class="info-chip-row">
+              <span class="info-chip"><svg class="icon"><use href="#icon-wind-arrow"/></svg>Vento 14 kn · NO</span>
+              <span class="info-chip warn"><svg class="icon"><use href="#icon-crowd"/></svg>Lungomare affollato</span>
+              <span class="info-chip"><svg class="icon"><use href="#icon-navigation"/></svg>Traghetti regolari</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-panel" data-panel="live">
           <div class="live-hero">
             <div class="race-tracker">
               <canvas class="race-canvas" id="raceCanvas" aria-hidden="true"></canvas>
@@ -286,8 +369,9 @@
         </div>
 
         <div class="app-panel" data-panel="map" id="mapPanel">
-          <div class="map-stage">
+          <div class="map-stage" id="mapStage">
             <canvas class="map-canvas" id="mapCanvas" aria-hidden="true"></canvas>
+            <div class="map-tooltip" id="mapTooltip" hidden></div>
 
             <div class="map-topbar">
               <div class="map-search">
@@ -306,7 +390,7 @@
             </div>
 
             <div class="map-fabs">
-              <button class="map-fab" id="layerToggle" aria-label="Cambia stile mappa: carta nautica o vista satellitare" title="Carta nautica / satellite">
+              <button class="map-fab" id="layerToggle" aria-label="Cambia stile mappa: mappa o vista satellitare" title="Mappa / satellite">
                 <svg class="icon"><use href="#icon-layers"/></svg>
               </button>
               <button class="map-fab" id="compassFab" aria-label="Orienta a nord" title="Orienta a nord">
@@ -322,49 +406,50 @@
             </div>
           </div>
 
-          <div class="sheet" id="mapSheet">
-            <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-expanded="false" aria-label="Trascina per espandere l'elenco dei punti panoramici"></div>
-            <div class="sheet-head">
-              <h4>Punti panoramici</h4>
+          <div class="map-dock">
+            <div class="map-dock-head">
               <span class="sheet-count mono" id="sheetCount">4 vicino a te</span>
+              <div class="map-legend">
+                <span class="legend-item"><span class="legend-dot current"></span>Tuo</span>
+                <span class="legend-item"><span class="legend-dot low"></span>Consigliato</span>
+                <span class="legend-item"><span class="legend-dot medium"></span>Medio</span>
+                <span class="legend-item"><span class="legend-dot high"></span>Affollato</span>
+              </div>
             </div>
-            <div class="sheet-list" id="sheetList">
-              <div class="vp-row-i" data-id="castel-ovo" data-tags="view quiet">
-                <span class="rank">1</span>
-                <div class="score-ring" style="--pct:94"><span>94</span></div>
-                <div class="vp-i-main">
-                  <span class="name">Castel dell'Ovo</span>
-                  <span class="meta">visuale libera · bassa affluenza · 750 m</span>
-                </div>
-                <button class="nav-btn" data-nav="Castel dell'Ovo" aria-label="Naviga verso Castel dell'Ovo"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
-              </div>
-              <div class="vp-row-i" data-id="posillipo" data-tags="view">
-                <span class="rank">2</span>
-                <div class="score-ring" style="--pct:88"><span>88</span></div>
-                <div class="vp-i-main">
-                  <span class="name">Posillipo — Belvedere</span>
-                  <span class="meta">visuale libera · media affluenza · 2.4 km</span>
-                </div>
-                <button class="nav-btn" data-nav="Posillipo — Belvedere" aria-label="Naviga verso Posillipo"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
-              </div>
-              <div class="vp-row-i" data-id="pizzofalcone" data-tags="quiet">
-                <span class="rank">3</span>
-                <div class="score-ring" style="--pct:81"><span>81</span></div>
-                <div class="vp-i-main">
-                  <span class="name">Pizzofalcone</span>
-                  <span class="meta">visuale parziale · bassa affluenza · 900 m</span>
-                </div>
-                <button class="nav-btn" data-nav="Pizzofalcone" aria-label="Naviga verso Pizzofalcone"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
-              </div>
-              <div class="vp-row-i" data-id="mergellina" data-tags="quiet">
-                <span class="rank">4</span>
-                <div class="score-ring" style="--pct:70"><span>70</span></div>
-                <div class="vp-i-main">
-                  <span class="name">Mergellina</span>
-                  <span class="meta">visuale parziale · bassa affluenza · 3.1 km</span>
-                </div>
-                <button class="nav-btn" data-nav="Mergellina" aria-label="Naviga verso Mergellina"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
-              </div>
+            <div class="map-carousel" id="mapCarousel">
+              <button class="vp-card current" type="button" data-id="castel-ovo" data-tags="view quiet">
+                <span class="vp-card-head">
+                  <span class="score-ring" style="--pct:94"><span>94</span></span>
+                  <span class="vp-card-crowd low"></span>
+                </span>
+                <span class="vp-card-name">Castel dell'Ovo</span>
+                <span class="vp-card-meta">750 m · <span class="vp-card-crowd-text">bassa affluenza</span></span>
+                <span class="vp-card-tag"><svg class="icon"><use href="#icon-navigation"/></svg>Vista su Boa 3</span>
+              </button>
+              <button class="vp-card" type="button" data-id="posillipo" data-tags="view">
+                <span class="vp-card-head">
+                  <span class="score-ring" style="--pct:88"><span>88</span></span>
+                  <span class="vp-card-crowd high"></span>
+                </span>
+                <span class="vp-card-name">Posillipo — Belvedere</span>
+                <span class="vp-card-meta">2.4 km · <span class="vp-card-crowd-text">alta affluenza</span></span>
+              </button>
+              <button class="vp-card" type="button" data-id="pizzofalcone" data-tags="quiet">
+                <span class="vp-card-head">
+                  <span class="score-ring" style="--pct:81"><span>81</span></span>
+                  <span class="vp-card-crowd low"></span>
+                </span>
+                <span class="vp-card-name">Pizzofalcone</span>
+                <span class="vp-card-meta">900 m · <span class="vp-card-crowd-text">bassa affluenza</span></span>
+              </button>
+              <button class="vp-card" type="button" data-id="mergellina" data-tags="quiet">
+                <span class="vp-card-head">
+                  <span class="score-ring" style="--pct:70"><span>70</span></span>
+                  <span class="vp-card-crowd low"></span>
+                </span>
+                <span class="vp-card-name">Mergellina</span>
+                <span class="vp-card-meta">3.1 km · <span class="vp-card-crowd-text">bassa affluenza</span></span>
+              </button>
             </div>
           </div>
         </div>
@@ -389,21 +474,27 @@
         </div>
       </div>
       <div class="app-tabbar">
-        <button class="app-tab active" data-panel="live"><svg class="icon tab-icon"><use href="#icon-tab-live"/></svg><span>Live</span></button>
+        <button class="app-tab active" data-panel="home"><svg class="icon tab-icon"><use href="#icon-tab-home"/></svg><span>Home</span></button>
+        <button class="app-tab" data-panel="live"><svg class="icon tab-icon"><use href="#icon-tab-live"/></svg><span>Live</span></button>
         <button class="app-tab" data-panel="map"><svg class="icon tab-icon"><use href="#icon-tab-map"/></svg><span>Mappa</span></button>
         <button class="app-tab" data-panel="game"><svg class="icon tab-icon"><use href="#icon-tab-game"/></svg><span>Gioco</span></button>
       </div>
     </div>
     <div class="demo-notes">
       <div class="card">
+        <span class="tag">Home</span>
+        <h3>Il tuo riepilogo, non un menu</h3>
+        <p>Punteggio, posizione in classifica, prossimo evento e punto salvato in un colpo d'occhio all'apertura — non un elenco di link, ma lo stato di dove sei nella regata.</p>
+      </div>
+      <div class="card">
         <span class="tag">Live</span>
         <h3>Il ciclo core, in una schermata</h3>
-        <p>La home non racconta la regata in astratto: porta subito al miglior punto di osservazione adesso e alla prossima previsione — con fallback esplicito se il segnale si interrompe, mai una schermata bianca.</p>
+        <p>La schermata Live non racconta la regata in astratto: porta subito al miglior punto di osservazione adesso e alla prossima previsione — con fallback esplicito se il segnale si interrompe, mai una schermata bianca.</p>
       </div>
       <div class="card">
         <span class="tag">Mappa</span>
         <h3>Vantage Point Finder</h3>
-        <p>Carta del golfo con punti panoramici e boe di regata pinnati, ricercabili, in vista carta nautica o satellitare.</p>
+        <p>Mappa del golfo in stile Apple/Google Maps con punti panoramici, linea di vista verso la boa attiva e livello di affollamento in tempo reale — non solo "dove sono i punti", ma perché conviene andarci.</p>
       </div>
       <div class="card">
         <span class="tag">Gioco</span>
