@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nava — America's Cup 2027, Golfo di Napoli</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden;">
+  <defs>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24"><polygon points="12 3 21 9 12 15 3 9"/><polyline points="4.5 13 12 18 19.5 13"/></symbol>
+    <symbol id="icon-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="12 7 14.2 12 12 17 9.8 12"/></symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.6"/><line x1="12" y1="2" x2="12" y2="5"/></symbol>
+    <symbol id="icon-flag" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="21"/><path d="M6 4.5 H17 L14.4 8 L17 11.5 H6"/></symbol>
+    <symbol id="icon-arrow-up-right" viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="9 7 17 7 17 15"/></symbol>
+    <symbol id="icon-sparkle" viewBox="0 0 24 24"><path style="fill:currentColor;stroke:none" d="M12 3 L13.4 10 L20.5 12 L13.4 14 L12 21 L10.6 14 L3.5 12 L10.6 10 Z"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle style="fill:currentColor;stroke:none" cx="12" cy="7.6" r="0.9"/></symbol>
+    <symbol id="icon-signal" viewBox="0 0 20 12"><rect style="fill:currentColor;stroke:none" x="0" y="7" width="3.4" height="5" rx="0.8"/><rect style="fill:currentColor;stroke:none" x="5.5" y="4.5" width="3.4" height="7.5" rx="0.8"/><rect style="fill:currentColor;stroke:none" x="11" y="2" width="3.4" height="10" rx="0.8"/><rect style="fill:currentColor;stroke:none;opacity:0.35" x="16.5" y="0" width="3.4" height="12" rx="0.8"/></symbol>
+    <symbol id="icon-wifi" viewBox="0 0 20 14"><path d="M1 5.2 C5 1.2 15 1.2 19 5.2"/><path d="M4.2 8.2 C7 5.6 13 5.6 15.8 8.2"/><circle style="fill:currentColor;stroke:none" cx="10" cy="12" r="1.2"/></symbol>
+    <symbol id="icon-battery" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.6"/><rect style="fill:currentColor;stroke:none" x="2.2" y="2.2" width="17.6" height="7.6" rx="1.4"/><rect style="fill:currentColor;stroke:none" x="22.5" y="4" width="1.7" height="4" rx="0.8"/></symbol>
+  </defs>
+</svg>
+
+<div class="theme-toggle" id="themeToggle" role="button" tabindex="0" aria-label="Cambia tema chiaro/scuro">TEMA · AUTO</div>
+
+<nav class="voyage-nav" id="voyageNav" aria-label="Navigazione del pitch">
+  <button data-target="hero" class="active"><span class="dot"></span><span class="bearing">— · rotta</span></button>
+  <button data-target="momento"><span class="dot"></span><span class="bearing">000° · il momento</span></button>
+  <button data-target="problema"><span class="dot"></span><span class="bearing">040° · il problema</span></button>
+  <button data-target="soluzione"><span class="dot"></span><span class="bearing">080° · vantage point</span></button>
+  <button data-target="gioco"><span class="dot"></span><span class="bearing">120° · prediction game</span></button>
+  <button data-target="demo"><span class="dot"></span><span class="bearing">160° · demo app</span></button>
+  <button data-target="architettura"><span class="dot"></span><span class="bearing">200° · architettura</span></button>
+  <button data-target="mercato"><span class="dot"></span><span class="bearing">240° · mercato</span></button>
+  <button data-target="rotta"><span class="dot"></span><span class="bearing">280° · roadmap</span></button>
+  <button data-target="richiesta"><span class="dot"></span><span class="bearing">320° · la richiesta</span></button>
+</nav>
+
+<section class="hero" id="hero">
+  <canvas id="chart-canvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <span class="eyebrow">America's Cup 2027 · Golfo di Napoli</span>
+    <h1>Un golfo intero.<br>Un solo punto giusto da cui guardarlo.</h1>
+    <p class="lede">Nava trasforma il Golfo di Napoli in un'unica esperienza di spettatore per l'America's Cup 2027: dove guardare la regata in ogni momento, e cosa sta succedendo in mare mentre lo guardi.</p>
+    <div class="hero-meta">
+      <div class="stat"><b>mag–lug</b><span>2027 · finestra di regata</span></div>
+      <div class="stat"><b>~20 km</b><span>di costa affacciata sul campo di regata</span></div>
+      <div class="stat"><b>2</b><span>moduli MVP: Vantage Point · Prediction Game</span></div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span class="line"></span>scorri la rotta</div>
+</section>
+
+<section id="momento">
+  <div class="section-head fade-in">
+    <span class="eyebrow">000° · il momento</span>
+    <h2>Il Golfo di Napoli ospita l'evento velico più seguito al mondo.</h2>
+    <p class="lede">Tra maggio e luglio 2027 le regate dell'America's Cup si corrono a poche centinaia di metri dalla costa napoletana. Castel dell'Ovo, Posillipo, Pizzofalcone, il lungomare: per la prima volta un pubblico enorme potrà assistere dal vivo, gratuitamente, senza biglietto — se sa dove andare.</p>
+  </div>
+  <div class="grid-3 fade-in">
+    <div class="card">
+      <span class="tag">Format</span>
+      <h3>Regate costiere</h3>
+      <p>Percorsi vicini a riva pensati per essere spettacolari da terra — a differenza delle edizioni in mare aperto.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Territorio</span>
+      <h3>Un anfiteatro naturale</h3>
+      <p>Il golfo offre decine di punti di osservazione naturali a quote e distanze diverse dal campo di regata.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Finestra</span>
+      <h3>Stagionalità estrema</h3>
+      <p>Poche settimane di picco, il resto dell'anno a traffico quasi nullo: un vincolo che guida ogni scelta tecnica di Nava.</p>
+    </div>
+  </div>
+</section>
+
+<section id="problema">
+  <div class="section-head fade-in">
+    <span class="eyebrow">040° · il problema</span>
+    <h2>Vedere la regata dalla costa è un'esperienza frammentata.</h2>
+    <p class="lede">Il pubblico arriva sul golfo senza sapere cosa lo aspetta: dove posizionarsi, cosa sta succedendo in acqua, cosa fare nei minuti in cui non succede nulla.</p>
+  </div>
+  <div class="grid-3 fade-in">
+    <div class="card">
+      <span class="tag">01</span>
+      <h3>Non sai dove guardare</h3>
+      <p>La rotta della regata cambia con vento e tattica: il punto migliore di stamattina non è quello del pomeriggio.</p>
+    </div>
+    <div class="card">
+      <span class="tag">02</span>
+      <h3>Non sai cosa succede</h3>
+      <p>Da terra, a distanza, è difficile leggere una virata o capire chi sta guadagnando la boa.</p>
+    </div>
+    <div class="card">
+      <span class="tag">03</span>
+      <h3>I tempi morti svuotano l'attesa</h3>
+      <p>Tra una manovra e l'altra il pubblico resta passivo — un'occasione persa per tenerlo agganciato.</p>
+    </div>
+  </div>
+</section>
+
+<section id="soluzione">
+  <div class="section-head fade-in">
+    <span class="eyebrow">080° · la soluzione — modulo 1</span>
+    <h2>Vantage Point Finder</h2>
+    <p class="lede">Un motore che classifica in tempo reale i punti di osservazione del golfo combinando rotta prevista delle barche, linea di vista reale calcolata sul modello di elevazione del territorio, e affollamento live segnalato dagli stessi spettatori.</p>
+  </div>
+  <div class="product-panel fade-in">
+    <div class="mock">
+      <header><span>nava · vantage points</span><span class="live-pill">live</span></header>
+      <div class="vp-row">
+        <span class="rank mono">1</span>
+        <span class="name">Castel dell'Ovo<small>visuale libera · bassa affluenza</small></span>
+        <span class="score mono">94</span>
+        <span class="bar-track"><span class="bar-fill" style="width:94%"></span></span>
+      </div>
+      <div class="vp-row">
+        <span class="rank mono">2</span>
+        <span class="name">Posillipo — Belvedere<small>visuale libera · media affluenza</small></span>
+        <span class="score mono">88</span>
+        <span class="bar-track"><span class="bar-fill" style="width:88%"></span></span>
+      </div>
+      <div class="vp-row">
+        <span class="rank mono">3</span>
+        <span class="name">Pizzofalcone<small>visuale parziale · bassa affluenza</small></span>
+        <span class="score mono">81</span>
+        <span class="bar-track"><span class="bar-fill" style="width:81%"></span></span>
+      </div>
+      <div class="vp-row">
+        <span class="rank mono">4</span>
+        <span class="name">Lungomare Caracciolo<small>visuale libera · alta affluenza</small></span>
+        <span class="score mono">76</span>
+        <span class="bar-track"><span class="bar-fill" style="width:76%"></span></span>
+      </div>
+    </div>
+    <div>
+      <div class="grid-3" style="grid-template-columns: 1fr;">
+        <div class="card">
+          <span class="tag">Input</span>
+          <h3>Rotta prevista</h3>
+          <p>Posizione e traiettoria attesa delle imbarcazioni, aggiornata via streaming.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Input</span>
+          <h3>Linea di vista reale</h3>
+          <p>Modello di elevazione del golfo: niente punteggi ottimistici su visuali in realtà ostruite.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Input</span>
+          <h3>Affollamento crowdsourced</h3>
+          <p>Chi è già sul posto segnala quanto è pieno — il ranking si aggiorna di conseguenza.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gioco">
+  <div class="section-head fade-in">
+    <span class="eyebrow">120° · la soluzione — modulo 2</span>
+    <h2>Prediction Game</h2>
+    <p class="lede">Nei momenti morti della regata, il pubblico previede la tattica in corso — chi vira per primo, chi arriva in testa alla prossima boa — e scala una leaderboard live. Validazione delle previsioni sempre lato server, mai fidandosi del client.</p>
+  </div>
+  <div class="product-panel fade-in">
+    <div>
+      <div class="grid-3" style="grid-template-columns: 1fr;">
+        <div class="card">
+          <span class="tag">Meccanica</span>
+          <h3>Eventi tattici a finestra</h3>
+          <p>Ogni previsione ha un'apertura e una chiusura legate al momento reale della regata.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Guardrail</span>
+          <h3>Anti-cheat dal primo prototipo</h3>
+          <p>Rate limiting e validazione server-side fin dall'MVP, non aggiunti "dopo il lancio".</p>
+        </div>
+        <div class="card">
+          <span class="tag">Prova di carico</span>
+          <h3>Pensato per il picco</h3>
+          <p>La leaderboard deve reggere migliaia di previsioni simultanee nel minuto clou della regata.</p>
+        </div>
+      </div>
+    </div>
+    <div class="mock">
+      <header><span>nava · leaderboard</span><span class="event-window mono">boa 2 · chiude in 00:42</span></header>
+      <div class="lb-row"><span class="pos mono">1</span><span>marcorossi_87</span><span class="pts mono">1.240</span></div>
+      <div class="lb-row you"><span class="pos mono">2</span><span>tu</span><span class="pts mono">1.180</span></div>
+      <div class="lb-row"><span class="pos mono">3</span><span>giuliavela</span><span class="pts mono">1.155</span></div>
+      <div class="lb-row"><span class="pos mono">4</span><span>skipper_luca</span><span class="pts mono">1.090</span></div>
+      <div class="lb-row"><span class="pos mono">5</span><span>anna_np</span><span class="pts mono">1.040</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="section-head fade-in">
+    <span class="eyebrow">160° · demo interattiva</span>
+    <h2>L'app, già navigabile.</h2>
+    <p class="lede">Un primo prototipo cliccabile dei due moduli, per farsi un'idea concreta di cosa vedrà chi scarica Nava durante l'evento. Esplora la mappa del golfo, prova a fare una previsione, o simula un'interruzione di segnale.</p>
+  </div>
+  <div class="demo-stage fade-in">
+    <div class="phone" id="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-power-btn"></div>
+      <div class="phone-screen">
+        <div class="app-statusbar">
+          <span class="status-time mono">9:41</span>
+          <div class="status-icons">
+            <svg class="icon icon-status"><use href="#icon-signal"/></svg>
+            <svg class="icon icon-status"><use href="#icon-wifi"/></svg>
+            <svg class="icon icon-status icon-battery"><use href="#icon-battery"/></svg>
+          </div>
+        </div>
+
+        <div class="app-panel active" data-panel="live">
+          <div class="race-tracker">
+            <canvas class="race-canvas" id="raceCanvas" aria-hidden="true"></canvas>
+            <div class="race-overlay-top">
+              <span class="live-pill" id="livePill">regata in corso</span>
+              <span class="race-note">Sirena in testa · Boa 2 → Boa 3</span>
+            </div>
+          </div>
+
+          <button class="live-link-card" type="button" data-goto="map">
+            <span class="live-link-icon"><svg class="icon"><use href="#icon-target"/></svg></span>
+            <span class="live-link-body">
+              <span class="live-link-label">Il tuo punto adesso</span>
+              <span class="live-link-title">Castel dell'Ovo <span class="score-chip">94</span></span>
+              <span class="live-link-meta">Affollamento in salita — <b>Posillipo</b> ora conviene di più</span>
+            </span>
+            <svg class="icon live-link-arrow"><use href="#icon-chevron-right"/></svg>
+          </button>
+
+          <button class="live-link-card" type="button" data-goto="game">
+            <span class="live-link-icon accent-signal"><svg class="icon"><use href="#icon-flag"/></svg></span>
+            <span class="live-link-body">
+              <span class="live-link-label">Prossima previsione</span>
+              <span class="live-link-title">Chi vira per primo alla Boa 3?</span>
+              <span class="live-link-meta">Apre tra <b>00:58</b> — non farti trovare impreparato</span>
+            </span>
+            <svg class="icon live-link-arrow"><use href="#icon-chevron-right"/></svg>
+          </button>
+
+          <p class="live-updated">Ultimo aggiornamento: <span id="liveAge">3 secondi fa</span></p>
+          <div class="feed" id="liveFeed">
+            <div class="feed-row"><span class="time">14:05</span><span>Barca Sirena raggiunge Boa 2 in testa</span></div>
+            <div class="feed-row"><span class="time">14:07</span><span>Distacco: 8 secondi</span></div>
+          </div>
+          <button class="mini-btn" id="simulateLoss">Simula interruzione segnale</button>
+          <div class="fallback-banner" id="fallbackBanner" hidden>
+            <svg class="icon"><use href="#icon-info"/></svg>
+            <span><strong>Segnale in aggiornamento</strong>Nessun feed nuovo dalla barca in questo momento. Mostriamo l'ultimo stato noto — nessun crash, nessuna schermata bianca.</span>
+          </div>
+        </div>
+
+        <div class="app-panel" data-panel="map" id="mapPanel">
+          <div class="map-stage">
+            <canvas class="map-canvas" id="mapCanvas" aria-hidden="true"></canvas>
+
+            <div class="map-topbar">
+              <div class="map-search">
+                <svg class="icon"><use href="#icon-search"/></svg>
+                <input type="text" id="mapSearch" placeholder="Cerca un punto panoramico" aria-label="Cerca un punto panoramico" />
+                <button class="search-clear" id="mapSearchClear" type="button" aria-label="Cancella ricerca" hidden>
+                  <svg class="icon"><use href="#icon-close"/></svg>
+                </button>
+              </div>
+              <div class="map-chips" id="mapChips">
+                <span class="chip-indicator" id="chipIndicator" aria-hidden="true"></span>
+                <button class="chip active" data-filter="all">Tutti</button>
+                <button class="chip" data-filter="view">Miglior visuale</button>
+                <button class="chip" data-filter="quiet">Meno affollati</button>
+              </div>
+            </div>
+
+            <div class="map-fabs">
+              <button class="map-fab" id="layerToggle" aria-label="Cambia stile mappa: carta nautica o vista satellitare" title="Carta nautica / satellite">
+                <svg class="icon"><use href="#icon-layers"/></svg>
+              </button>
+              <button class="map-fab" id="compassFab" aria-label="Orienta a nord" title="Orienta a nord">
+                <svg class="icon"><use href="#icon-compass"/></svg>
+              </button>
+            </div>
+
+            <div class="ar-teaser-wrap">
+              <button class="ar-teaser" id="arTeaser" type="button">
+                <svg class="icon"><use href="#icon-sparkle"/></svg> Visualizza in AR
+              </button>
+              <div class="ar-tooltip" id="arTooltip" hidden>In arrivo con il modulo AR — Fase 4, dopo M1 e M2 stabili.</div>
+            </div>
+          </div>
+
+          <div class="sheet" id="mapSheet">
+            <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-expanded="false" aria-label="Trascina per espandere l'elenco dei punti panoramici"></div>
+            <div class="sheet-head">
+              <h4>Punti panoramici</h4>
+              <span class="sheet-count mono" id="sheetCount">4 vicino a te</span>
+            </div>
+            <div class="sheet-list" id="sheetList">
+              <div class="vp-row-i" data-id="castel-ovo" data-tags="view quiet">
+                <span class="rank">1</span>
+                <div class="score-ring" style="--pct:94"><span>94</span></div>
+                <div class="vp-i-main">
+                  <span class="name">Castel dell'Ovo</span>
+                  <span class="meta">visuale libera · bassa affluenza · 750 m</span>
+                </div>
+                <button class="nav-btn" data-nav="Castel dell'Ovo" aria-label="Naviga verso Castel dell'Ovo"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
+              </div>
+              <div class="vp-row-i" data-id="posillipo" data-tags="view">
+                <span class="rank">2</span>
+                <div class="score-ring" style="--pct:88"><span>88</span></div>
+                <div class="vp-i-main">
+                  <span class="name">Posillipo — Belvedere</span>
+                  <span class="meta">visuale libera · media affluenza · 2.4 km</span>
+                </div>
+                <button class="nav-btn" data-nav="Posillipo — Belvedere" aria-label="Naviga verso Posillipo"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
+              </div>
+              <div class="vp-row-i" data-id="pizzofalcone" data-tags="quiet">
+                <span class="rank">3</span>
+                <div class="score-ring" style="--pct:81"><span>81</span></div>
+                <div class="vp-i-main">
+                  <span class="name">Pizzofalcone</span>
+                  <span class="meta">visuale parziale · bassa affluenza · 900 m</span>
+                </div>
+                <button class="nav-btn" data-nav="Pizzofalcone" aria-label="Naviga verso Pizzofalcone"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
+              </div>
+              <div class="vp-row-i" data-id="mergellina" data-tags="quiet">
+                <span class="rank">4</span>
+                <div class="score-ring" style="--pct:70"><span>70</span></div>
+                <div class="vp-i-main">
+                  <span class="name">Mergellina</span>
+                  <span class="meta">visuale parziale · bassa affluenza · 3.1 km</span>
+                </div>
+                <button class="nav-btn" data-nav="Mergellina" aria-label="Naviga verso Mergellina"><svg class="icon"><use href="#icon-arrow-up-right"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-panel" data-panel="game">
+          <h4>Prediction Game</h4>
+          <div class="game-question">
+            <span class="event-window mono">boa 3 · chiude in 00:58</span>
+            <p class="prompt">Chi vira per primo alla prossima boa?</p>
+            <div class="choice-row" id="choiceRow">
+              <button class="choice-btn" data-choice="Partenope"><span>Partenope</span><span class="odds mono">x2.1</span></button>
+              <button class="choice-btn" data-choice="Sirena"><span>Sirena</span><span class="odds mono">x1.8</span></button>
+              <button class="choice-btn" data-choice="Megaride"><span>Megaride</span><span class="odds mono">x3.4</span></button>
+            </div>
+            <span class="game-confirm mono" id="gameConfirm" hidden></span>
+          </div>
+          <div class="mini-leaderboard">
+            <div class="lb-row"><span class="pos mono">1</span><span>marcorossi_87</span><span class="pts mono">1.240</span></div>
+            <div class="lb-row you"><span class="pos mono">2</span><span>tu</span><span class="pts mono">1.180</span></div>
+            <div class="lb-row"><span class="pos mono">3</span><span>giuliavela</span><span class="pts mono">1.155</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="app-tabbar">
+        <button class="app-tab active" data-panel="live">Live</button>
+        <button class="app-tab" data-panel="map">Mappa</button>
+        <button class="app-tab" data-panel="game">Gioco</button>
+      </div>
+    </div>
+    <div class="demo-notes">
+      <div class="card">
+        <span class="tag">Live</span>
+        <h3>Il ciclo core, in una schermata</h3>
+        <p>La home non racconta la regata in astratto: porta subito al miglior punto di osservazione adesso e alla prossima previsione — con fallback esplicito se il segnale si interrompe, mai una schermata bianca.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Mappa</span>
+        <h3>Vantage Point Finder</h3>
+        <p>Carta del golfo con punti panoramici e boe di regata pinnati, ricercabili, in vista carta nautica o satellitare.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Gioco</span>
+        <h3>Prediction Game</h3>
+        <p>Previsione tattica cliccabile con conferma immediata — la validazione vera resta sempre lato server.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="architettura">
+  <div class="section-head fade-in">
+    <span class="eyebrow">200° · come è costruita</span>
+    <h2>Un evento live non può cadere. L'architettura parte da lì.</h2>
+    <p class="lede">Ogni scelta tecnica di Nava è valutata su tre assi, non solo sulla feature che abilita.</p>
+  </div>
+  <div class="pillars fade-in">
+    <div class="pillar">
+      <span class="mono-label">01 · costi</span>
+      <h3>Scala a zero fuori regata</h3>
+      <p>Il traffico è per natura a picchi stagionali: infrastruttura serverless dove sensato, storage a livelli, nessun costo fisso nei mesi morti.</p>
+      <div class="tradeoff"><b>Trade-off:</b> più latenza a freddo sui primi utenti del giorno, accettabile per un uso non continuo.</div>
+    </div>
+    <div class="pillar">
+      <span class="mono-label">02 · resilienza</span>
+      <h3>Mai una schermata bianca</h3>
+      <p>Multi-AZ, circuit breaker, fallback sull'ultimo stato noto: se un feed a monte si interrompe, l'app degrada, non crolla.</p>
+      <div class="tradeoff"><b>Trade-off:</b> più complessità di gestione dello stato, necessaria per un evento che non si può ripetere.</div>
+    </div>
+    <div class="pillar">
+      <span class="mono-label">03 · sicurezza</span>
+      <h3>Dati utente e gioco protetti</h3>
+      <p>Nessuna posizione o identità esposta senza autenticazione; rate limiting e anti-cheat sulla leaderboard fin dal prototipo.</p>
+      <div class="tradeoff"><b>Trade-off:</b> onboarding leggermente più attento, per un pubblico che comunque non richiede account completo.</div>
+    </div>
+  </div>
+</section>
+
+<section id="mercato">
+  <div class="section-head fade-in">
+    <span class="eyebrow">240° · a chi serve</span>
+    <h2>Il valore si distribuisce su tutta la filiera dell'evento.</h2>
+    <p class="lede">Nava non vende biglietti: rende migliore un'esperienza già gratuita, e questo genera valore per chi organizza, ospita e sostiene l'evento.</p>
+  </div>
+  <div class="audience-grid fade-in">
+    <div class="card">
+      <span class="tag">Organizzatori</span>
+      <h3>Gestione del pubblico</h3>
+      <p>Distribuire gli spettatori sui punti di osservazione riduce la pressione sui pochi luoghi più noti.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Enti turistici</span>
+      <h3>Permanenza sul territorio</h3>
+      <p>Un pubblico che sa dove andare esplora più punti del golfo, non solo il lungomare centrale.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Sponsor</span>
+      <h3>Superficie di visibilità</h3>
+      <p>Un'app usata attivamente durante l'intera finestra di regata, non solo il giorno della gara.</p>
+    </div>
+    <div class="card">
+      <span class="tag">Pubblico</span>
+      <h3>Esperienza gratuita migliore</h3>
+      <p>Nessuna barriera d'accesso: solo un'esperienza da spettatore più informata e più coinvolta.</p>
+    </div>
+  </div>
+</section>
+
+<section id="rotta">
+  <div class="section-head fade-in">
+    <span class="eyebrow">280° · la rotta</span>
+    <h2>Le fasi, senza scorciatoie.</h2>
+    <p class="lede">Ogni fase ha un criterio d'uscita verificabile prima di passare alla successiva — nessun modulo bonus prima che i due moduli principali siano stabili.</p>
+  </div>
+  <div class="route fade-in">
+    <div class="leg current">
+      <div class="leg-head"><span class="phase-id mono">FASE 0</span><h3>Fondamenta</h3><span class="status">in corso</span></div>
+      <p>Scheletro monorepo, CI, infrastruttura minima di staging, health-check, autenticazione leggera.</p>
+    </div>
+    <div class="leg">
+      <div class="leg-head"><span class="phase-id mono">FASE 1</span><h3>M1 — Vantage Point Finder</h3><span class="status">pianificata</span></div>
+      <p>Ranking dei punti di osservazione su dati di regata simulati, aggiornamento realtime via WebSocket.</p>
+    </div>
+    <div class="leg">
+      <div class="leg-head"><span class="phase-id mono">FASE 2</span><h3>M2 — Prediction Game</h3><span class="status">pianificata</span></div>
+      <p>Eventi tattici, leaderboard live, anti-cheat, test di carico sul picco simulato.</p>
+    </div>
+    <div class="leg">
+      <div class="leg-head"><span class="phase-id mono">FASE 3</span><h3>Integrazione e hardening</h3><span class="status">pianificata</span></div>
+      <p>App unica, hardening sicurezza, revisione costi, test di resilienza, ADR documentati.</p>
+    </div>
+    <div class="leg">
+      <div class="leg-head"><span class="phase-id mono">FASE 4</span><h3>AR Overlay <span class="mono" style="font-size:0.7rem;color:var(--text-dim);">— bonus</span></h3><span class="status">solo se il resto è stabile</span></div>
+      <p>Prototipo separato, non integrato subito nell'app principale.</p>
+    </div>
+  </div>
+</section>
+
+<section id="richiesta">
+  <div class="ask-panel fade-in">
+    <div class="section-head" style="margin-bottom:0;">
+      <span class="eyebrow">320° · la richiesta</span>
+      <h2>Cosa serve per portare Nava alla partenza.</h2>
+      <p class="lede">Nava è un progetto pilota costruito per dimostrare che questa architettura regge un evento live reale. Per arrivare pronti a maggio 2027 servono tre cose concrete — la rotta non si chiude da sola.</p>
+    </div>
+    <div class="ask-list">
+      <div class="item"><span class="k">Partnership evento</span><span class="v">Accesso ai dati ufficiali di posizione barche in prossimità di costa.</span></div>
+      <div class="item"><span class="k">Supporto istituzionale</span><span class="v">Un interlocutore su territorio e viabilità per il livello trasporti/parcheggio.</span></div>
+      <div class="item"><span class="k">Copertura tecnica</span><span class="v">Budget per hardening e test di carico prima della finestra di regata.</span></div>
+    </div>
+    <button class="cta">Parliamone</button>
+  </div>
+</section>
+
+<footer>
+  <span>NAVA — America's Cup 2027 · Golfo di Napoli</span>
+  <span>Progetto pilota — architettura in sviluppo, dati di prodotto in questo documento a scopo dimostrativo</span>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
