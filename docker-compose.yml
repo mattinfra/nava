@@ -1,0 +1,41 @@
+name: golfolive
+
+# Infra minima di Fase 0 per sviluppo locale (CLAUDE.md §3: Postgres+PostGIS
+# per i dati geospaziali, Redis per stato live/leaderboard/rate limiting).
+# Non è l'infra di staging/produzione — quella è Terraform su AWS e richiede
+# una decisione separata su account/costi (vedi PLAN.md, criterio di uscita
+# Fase 0).
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: golfolive
+      POSTGRES_PASSWORD: golfolive
+      POSTGRES_DB: golfolive
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U golfolive -d golfolive"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
+  redis-data:

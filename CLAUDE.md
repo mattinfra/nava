@@ -91,6 +91,7 @@ Se serve deviare da questo stack per un motivo tecnico valido, spiegalo prima di
 ## 7. Comandi utili
 
 ```
+docker compose up -d   # avvia Postgres+PostGIS e Redis in locale (vedi ADR 0003)
 npm run dev          # avvia api + web in locale
 npm run test          # test unitari e integrazione
 npm run lint           # lint + type check
