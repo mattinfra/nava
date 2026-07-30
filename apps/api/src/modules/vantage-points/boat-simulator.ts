@@ -1,4 +1,5 @@
 import type { BoatPosition } from "@golfolive/shared-types";
+import { distanceMeters } from "./ranking.js";
 
 // Generatore di posizioni barche simulate (PLAN.md Fase 1, passo 2): finché
 // non c'è un feed reale, un anello percorso ciclicamente attorno al campo di
@@ -33,6 +34,19 @@ function loopSegmentLengths(): number[] {
 const SEGMENT_LENGTHS = loopSegmentLengths();
 const LOOP_LENGTH = SEGMENT_LENGTHS.reduce((sum, len) => sum + len, 0);
 
+// Lunghezza reale del giro in metri (haversine sui waypoint), usata solo per
+// stimare la velocità media di ogni barca — la parametrizzazione del punto
+// sul giro sopra usa invece la lunghezza in gradi, più semplice da interpolare.
+function loopLengthMeters(): number {
+  let total = 0;
+  for (let i = 0; i < COURSE_LOOP.length - 1; i++) {
+    total += distanceMeters(COURSE_LOOP[i]!, COURSE_LOOP[i + 1]!);
+  }
+  return total;
+}
+const LOOP_LENGTH_METERS = loopLengthMeters();
+const METERS_PER_SECOND_TO_KNOTS = 1.943844;
+
 function pointOnLoop(progress: number): { latitude: number; longitude: number; headingDegrees: number } {
   const t = ((progress % 1) + 1) % 1;
   const target = t * LOOP_LENGTH;
@@ -63,8 +77,10 @@ function pointOnLoop(progress: number): { latitude: number; longitude: number; h
 export function getSimulatedBoatPositions(now: number = Date.now()): BoatPosition[] {
   const timestamp = new Date(now).toISOString();
   return SIMULATED_BOATS.map(({ boatId, lapDurationMs, phase }) => {
-    const progress = phase + now / lapDurationMs;
-    const { latitude, longitude, headingDegrees } = pointOnLoop(progress);
-    return { boatId, latitude, longitude, headingDegrees, timestamp };
+    const rawProgress = phase + now / lapDurationMs;
+    const { latitude, longitude, headingDegrees } = pointOnLoop(rawProgress);
+    const progress = ((rawProgress % 1) + 1) % 1;
+    const speedKnots = (LOOP_LENGTH_METERS / (lapDurationMs / 1000)) * METERS_PER_SECOND_TO_KNOTS;
+    return { boatId, latitude, longitude, headingDegrees, timestamp, progress, speedKnots };
   });
 }

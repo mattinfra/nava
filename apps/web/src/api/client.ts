@@ -1,4 +1,4 @@
-import type { BoatPosition, RankedVantagePoint } from "@golfolive/shared-types";
+import type { BoatPosition, GeoPoint, RankedVantagePoint } from "@golfolive/shared-types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -10,7 +10,10 @@ async function getJson<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function fetchVantagePoints(): Promise<{ vantagePoints: RankedVantagePoint[] }> {
+export function fetchVantagePoints(): Promise<{
+  vantagePoints: RankedVantagePoint[];
+  raceCourseStart: GeoPoint;
+}> {
   return getJson("/vantage-points");
 }
 

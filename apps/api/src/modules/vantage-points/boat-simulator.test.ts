@@ -10,6 +10,9 @@ describe("getSimulatedBoatPositions", () => {
       expect(typeof boat.longitude).toBe("number");
       expect(boat.headingDegrees).toBeGreaterThanOrEqual(0);
       expect(boat.headingDegrees).toBeLessThan(360);
+      expect(boat.progress).toBeGreaterThanOrEqual(0);
+      expect(boat.progress).toBeLessThan(1);
+      expect(boat.speedKnots).toBeGreaterThan(0);
     });
   });
 

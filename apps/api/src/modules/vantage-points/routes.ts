@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { getSimulatedBoatPositions } from "./boat-simulator.js";
-import { STATIC_VANTAGE_POINTS } from "./data.js";
+import { RACE_COURSE_START, STATIC_VANTAGE_POINTS } from "./data.js";
 import { rankVantagePoints } from "./ranking.js";
 import { currentCrowdingLevels, isKnownVantagePoint, reportCrowding } from "./crowd-store.js";
 
@@ -21,7 +21,7 @@ export async function vantagePointsRoutes(app: FastifyInstance): Promise<void> {
       ...vp,
       crowdingLevel: currentCrowdingLevels().get(vp.id) ?? vp.crowdingLevel,
     }));
-    return { vantagePoints: rankVantagePoints(withLiveCrowding) };
+    return { vantagePoints: rankVantagePoints(withLiveCrowding), raceCourseStart: RACE_COURSE_START };
   });
 
   app.get("/boats", async () => {

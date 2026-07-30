@@ -41,6 +41,15 @@ export interface BoatPosition {
   longitude: number;
   headingDegrees: number;
   timestamp: string;
+  /** frazione di giro percorsa sul percorso simulato, 0-1 (vedi PLAN.md: da
+   * ridefinire quando la posizione barche non sarà più simulata) */
+  progress: number;
+  speedKnots: number;
+}
+
+export interface GeoPoint {
+  latitude: number;
+  longitude: number;
 }
 
 export interface GameEvent {
