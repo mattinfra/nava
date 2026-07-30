@@ -62,6 +62,10 @@ Se serve deviare da questo stack per un motivo tecnico valido, spiegalo prima di
   CLAUDE.md
   PLAN.md
   /adr            → Architecture Decision Records (una per ogni scelta architetturale importante)
+  /site           → pitch deck statico (marketing/investor demo) — NON è il prodotto, vedi §8
+  /mock           → prototipo di design del prodotto reale (bassa/media fedeltà, HTML statico),
+                    precede l'implementazione React in /apps/web — segue comunque l'ordine di
+                    priorità di PLAN.md (M1 prima di M2)
 ```
 
 ## 5. Convenzioni di codice
@@ -97,6 +101,10 @@ terraform plan         # (in /infra/terraform) verifica modifiche infra prima di
 ## 8. Cosa NON fare
 
 - Non iniziare il modulo AR (bonus) finché M1 e M2 non hanno un MVP funzionante end-to-end.
+  **Eccezione esplicita**: i mockup dimostrativi in `/docs/site` sono materiale di pitch/marketing,
+  non implementazione del prodotto, e non sono soggetti a questo ordine di fasi. `/docs/mock`
+  invece è un prototipo del prodotto reale e *segue* l'ordine di priorità (M1 prima di M2, AR per
+  ultimo) anche se resta solo design, non codice applicativo.
 - Non introdurre servizi cloud proprietari costosi "di default" quando esiste un'alternativa
   open-source/gestita più economica con lo stesso risultato.
 - Non scrivere logica di sicurezza "provvisoria da sistemare dopo": va scritta bene la prima volta

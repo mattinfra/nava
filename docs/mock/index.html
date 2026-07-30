@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nava — prototipo prodotto (Home + Live + Vantage Point Finder)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!--
+  docs/mock — prototipo di design del prodotto reale (M1: Home/Dashboard +
+  Vantage Point Finder, più un'anteprima di design M2: Live), media/alta
+  fedeltà, stile iOS/Apple. Non è materiale di pitch: vedi CLAUDE.md §4/§8 e
+  PLAN.md per la distinzione rispetto a docs/site. Tutti i dati (regate,
+  classifiche, notizie, posizioni barche) sono simulati a scopo di design,
+  nessuna integrazione con dati ufficiali/proprietari dei team (PLAN.md,
+  "Esplicitamente fuori scope").
+-->
+
+<svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden;">
+  <defs>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.6"/><line x1="12" y1="2" x2="12" y2="5"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle style="fill:currentColor;stroke:none" cx="12" cy="7.6" r="0.9"/></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><path d="M12 3 L22 20 H2 Z"/><line x1="12" y1="9" x2="12" y2="14.5"/><circle style="fill:currentColor;stroke:none" cx="12" cy="17.3" r="0.9"/></symbol>
+    <symbol id="icon-tab-home" viewBox="0 0 24 24"><path d="M4 11.5 L12 4 L20 11.5"/><path d="M6 10 V20 H18 V10"/><line x1="10" y1="20" x2="10" y2="14.5"/><line x1="14" y1="20" x2="14" y2="14.5"/><line x1="10" y1="14.5" x2="14" y2="14.5"/></symbol>
+    <symbol id="icon-tab-live" viewBox="0 0 24 24"><path d="M12 2 C6.5 5.5 4 9 4 13 a8 8 0 0 0 16 0 c0-4-2.5-7.5-8-11Z"/><path d="M12 9 c-1.6 1.7-2.6 3.2-2.6 4.6 a2.6 2.6 0 0 0 5.2 0 c0-1.4-1-2.9-2.6-4.6Z" style="fill:currentColor;stroke:none"/></symbol>
+    <symbol id="icon-tab-map" viewBox="0 0 24 24"><path d="M9 4 L4 6 V20 L9 18 L15 20 L20 18 V4 L15 6 L9 4Z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></symbol>
+    <symbol id="icon-tab-game" viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="10" rx="5"/><line x1="4.6" y1="13" x2="9.4" y2="13"/><line x1="7" y1="10.6" x2="7" y2="15.4"/><circle style="fill:currentColor;stroke:none" cx="15.5" cy="11.5" r="1.15"/><circle style="fill:currentColor;stroke:none" cx="18.2" cy="14.2" r="1.15"/></symbol>
+    <symbol id="icon-crowd" viewBox="0 0 24 24"><circle cx="8.5" cy="8" r="2.6"/><circle cx="16" cy="9" r="2.1"/><path d="M3.5 19 c0-3.3 2.2-5.4 5-5.4 s5 2.1 5 5.4"/><path d="M14.2 19 c0-2.6 1.6-4.5 3.8-4.5 s3.5 1.6 3.5 4"/></symbol>
+    <symbol id="icon-wind" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="4"/><polyline points="6 10 12 4 18 10"/></symbol>
+    <symbol id="icon-current" viewBox="0 0 24 24"><path d="M3 8 Q7 4 11 8 T19 8"/><path d="M3 14 Q7 10 11 14 T19 14"/><polyline points="16 11 19 14 16 17"/></symbol>
+    <symbol id="icon-search-empty" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/><line x1="8.5" y1="11" x2="13.5" y2="11"/></symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24"><polygon points="12 3 21 9 12 15 3 9"/><polyline points="4.5 13 12 18 19.5 13"/></symbol>
+    <symbol id="icon-cube" viewBox="0 0 24 24"><path d="M12 3 L20 7.5 V16.5 L12 21 L4 16.5 V7.5 Z"/><polyline points="4 7.5 12 12 20 7.5"/><line x1="12" y1="12" x2="12" y2="21"/></symbol>
+    <symbol id="icon-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><line x1="12" y1="2" x2="12" y2="5.5"/><line x1="12" y1="18.5" x2="12" y2="22"/><line x1="2" y1="12" x2="5.5" y2="12"/><line x1="18.5" y1="12" x2="22" y2="12"/></symbol>
+    <symbol id="icon-flag" viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="21"/><path d="M6 4.5 H17 L14.4 8 L17 11.5 H6"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="M6 4 L20 12 L6 20 Z" style="fill:currentColor;stroke:none"/></symbol>
+    <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M7 4 H17 V9 a5 5 0 0 1-10 0 Z"/><path d="M7 5.5 H4 a3.5 3.5 0 0 0 3.5 4.5"/><path d="M17 5.5 H20 a3.5 3.5 0 0 1-3.5 4.5"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line x1="9.5" y1="18" x2="14.5" y2="18"/></symbol>
+    <symbol id="icon-doc" viewBox="0 0 24 24"><path d="M6 3 H14 L18 7 V21 H6 Z"/><polyline points="14 3 14 7 18 7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15.5" x2="15" y2="15.5"/><line x1="9" y1="9" x2="12" y2="9"/></symbol>
+    <symbol id="icon-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="14.2 9.8 12 12 9.8 14.2 12 9.8 12 9.8 14.2 9.8" style="fill:currentColor;stroke:none"/><polygon points="12 5 13.6 10.4 12 12 10.4 10.4" style="fill:currentColor;stroke:none"/></symbol>
+    <symbol id="icon-trend-up" viewBox="0 0 24 24"><polyline points="4 17 10 11 14 15 20 7"/><polyline points="14 7 20 7 20 13"/></symbol>
+    <symbol id="icon-trend-down" viewBox="0 0 24 24"><polyline points="4 7 10 13 14 9 20 17"/><polyline points="14 17 20 17 20 11"/></symbol>
+    <symbol id="icon-trend-flat" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12"/></symbol>
+    <symbol id="icon-boat" viewBox="0 0 24 24"><path d="M12 2 V16"/><path d="M12 4 L18 14 L12 16 Z" style="fill:currentColor;stroke:none"/><path d="M4 18 H20 L18 21 H6 Z"/></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M12 21 C12 21 5 13.5 5 9 a7 7 0 0 1 14 0 C19 13.5 12 21 12 21 Z"/><circle cx="12" cy="9" r="2.4"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="3"/><line x1="3.5" y1="10" x2="20.5" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><polyline points="4.5 12.5 9.5 17.5 19.5 6.5"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 6.5 12 12 16 14.5"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="M12 2 L14 9 L21 12 L14 15 L12 22 L10 15 L3 12 L10 9 Z"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/><polyline points="9 12 11.2 14.2 15.5 9.5"/></symbol>
+  </defs>
+</svg>
+
+<div class="app-shell" id="appShell">
+
+  <header class="app-topbar">
+    <span class="wordmark">nava<span>.</span></span>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambia tema chiaro/scuro">TEMA · AUTO</button>
+  </header>
+
+  <div class="app-body">
+
+    <!-- ============ 1. Permission gate (primo avvio) ============ -->
+    <section class="screen active" data-screen="gate">
+      <div class="gate">
+        <div class="gate-icon"><svg class="icon"><use href="#icon-target"/></svg></div>
+        <h1>Trova il punto migliore per goderti la regata</h1>
+        <p>Nava usa la tua posizione per ordinare i punti di osservazione del golfo in base a quanto sono vicini e quanto sono affollati adesso. Puoi continuare anche senza attivarla.</p>
+        <div class="gate-actions">
+          <button class="btn-primary" id="grantLocationBtn" type="button">Attiva la posizione</button>
+          <button class="btn-ghost" id="skipLocationBtn" type="button">Continua senza posizione</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. Home — Dashboard stile diretta.it ============ -->
+    <section class="screen" data-screen="home">
+      <div class="home-scroll">
+        <h1 class="large-title"><small>Oggi al Golfo</small>Ciao.</h1>
+
+        <button class="live-strip" id="liveStrip" type="button" data-goto="live">
+          <span class="live-strip-dot"></span>
+          <span class="live-strip-body">
+            <span class="live-strip-title">In diretta ora · Regata 4, Flotta A</span>
+            <span class="live-strip-meta">ITA 1 in testa · boa 1 tra 6 min</span>
+          </span>
+          <svg class="icon chev"><use href="#icon-chevron-right"/></svg>
+        </button>
+
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <span class="stat-value mono">3</span>
+            <span class="stat-label">Regate oggi</span>
+          </div>
+          <div class="stat-tile accent">
+            <span class="stat-value mono">1</span>
+            <span class="stat-label">Live adesso</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value mono">94</span>
+            <span class="stat-label">Punteggio miglior punto</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value mono">750 m</span>
+            <span class="stat-label">Punto salvato</span>
+          </div>
+        </div>
+
+        <div class="home-section">
+          <div class="section-head">
+            <h3><svg class="icon"><use href="#icon-calendar"/></svg>Programma di oggi</h3>
+          </div>
+          <div class="fixture-list" id="fixtureList"></div>
+        </div>
+
+        <div class="home-section" id="savedPointSection" hidden>
+          <div class="section-head"><h3><svg class="icon"><use href="#icon-pin"/></svg>Il tuo punto salvato</h3></div>
+          <button class="saved-point-card" type="button" data-goto="map" data-open-detail="castel-ovo">
+            <span class="score-badge">94</span>
+            <span class="body">
+              <span class="title">Castel dell'Ovo</span>
+              <span class="meta">A 750 m da te — bassa affluenza</span>
+            </span>
+            <svg class="icon chev"><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+
+        <div class="home-section" id="noLocationNote" hidden>
+          <div class="placeholder-note">
+            <svg class="icon"><use href="#icon-info"/></svg>
+            <span>Posizione non attiva: i punti nella mappa sono ordinati per nome, non per distanza. Puoi attivarla in qualsiasi momento dalla mappa.</span>
+          </div>
+        </div>
+
+        <div class="home-section">
+          <div class="section-head">
+            <h3><svg class="icon"><use href="#icon-doc"/></svg>News dal Golfo</h3>
+          </div>
+          <div class="news-list" id="newsListHome"></div>
+        </div>
+
+        <div class="home-section">
+          <div class="placeholder-note subtle">
+            <svg class="icon"><use href="#icon-info"/></svg>
+            <span>Live, classifica e Prediction Game qui sono un'anteprima di design con dati simulati — l'implementazione reale segue il Vantage Point Finder (vedi PLAN.md, M1 prima di M2).</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. Vantage Point Finder — mappa reale + overlay nautico ============ -->
+    <section class="screen" data-screen="map">
+
+      <div class="map-stage" id="mapStage">
+        <div class="map-canvas-wrap" id="mapCanvasWrap">
+          <canvas class="map-canvas" id="mapCanvas" aria-hidden="true"></canvas>
+        </div>
+        <div class="map-horizon-fade" aria-hidden="true"></div>
+
+        <div class="map-overlay-top">
+          <div class="map-search">
+            <svg class="icon"><use href="#icon-search"/></svg>
+            <input type="text" id="vpfSearch" placeholder="Cerca un punto panoramico" aria-label="Cerca un punto panoramico" />
+            <button class="clear-btn" id="vpfSearchClear" type="button" aria-label="Cancella ricerca" hidden><svg class="icon"><use href="#icon-close"/></svg></button>
+          </div>
+
+          <div class="segmented segmented-mode" id="vpfModeChips">
+            <button class="chip active" data-mode="points">Punti panoramici</button>
+            <button class="chip" data-mode="boats">Naviga vele</button>
+          </div>
+
+          <div class="segmented" id="vpfChips">
+            <button class="chip active" data-filter="all">Tutti</button>
+            <button class="chip" data-filter="view">Miglior visuale</button>
+            <button class="chip" data-filter="quiet">Meno affollati</button>
+            <button class="chip" data-filter="near">Vicino a te</button>
+          </div>
+
+          <div class="geo-banner" id="geoBanner" hidden>
+            <svg class="icon"><use href="#icon-info"/></svg>
+            <span>Attiva la posizione per vedere distanza e punti vicino a te.</span>
+            <button id="geoBannerBtn" type="button">Attiva</button>
+          </div>
+
+          <div class="degraded-banner" id="degradedBanner" hidden>
+            <svg class="icon"><use href="#icon-alert"/></svg>
+            <span><strong>Feed di regata non aggiornato</strong>Mostriamo l'ultimo ranking noto (12 minuti fa). Punteggi e affollamento possono non riflettere la situazione attuale.</span>
+          </div>
+
+          <div class="map-chip-row">
+            <span class="wind-chip"><svg class="icon" id="windIcon"><use href="#icon-wind"/></svg><span id="windLabel">14 kn · NO</span></span>
+            <span class="current-chip"><svg class="icon"><use href="#icon-current"/></svg><span id="currentLabel">0.6 kn</span></span>
+            <span class="leader-chip" id="leaderChip" hidden><svg class="icon"><use href="#icon-boat"/></svg><span id="leaderLabel">ITA 1 in testa</span></span>
+          </div>
+        </div>
+
+        <div class="map-fabs">
+          <div class="map-compass" id="mapCompass" hidden aria-hidden="true">
+            <svg class="icon"><use href="#icon-compass"/></svg>
+            <span>N</span>
+          </div>
+          <button class="map-fab" id="layerToggle" type="button" aria-label="Cambia stile mappa" title="Standard / Satellite">
+            <svg class="icon"><use href="#icon-layers"/></svg>
+          </button>
+          <button class="map-fab" id="tilt3dToggle" type="button" aria-label="Attiva vista 3D" title="Vista 3D">
+            <svg class="icon"><use href="#icon-cube"/></svg>
+          </button>
+          <button class="map-fab" id="zoomInBtn" type="button" aria-label="Zoom avanti" title="Zoom avanti">+</button>
+          <button class="map-fab" id="zoomOutBtn" type="button" aria-label="Zoom indietro" title="Zoom indietro">−</button>
+          <button class="map-fab" id="locateBtn" type="button" aria-label="Centra sulla mia posizione" title="La mia posizione">
+            <svg class="icon"><use href="#icon-locate"/></svg>
+          </button>
+          <button class="map-fab" id="vpfSimulateBtn" type="button" aria-label="Simula interruzione feed" title="Simula interruzione feed">
+            <svg class="icon"><use href="#icon-alert"/></svg>
+          </button>
+        </div>
+
+        <div class="map-legend-wrap">
+          <div class="map-legend-popover" id="mapLegendPopover" hidden>
+            <h4>Dettagli nautici sulla mappa</h4>
+            <div class="legend-row"><span class="legend-swatch" style="border-color:#c89b3c;"></span>Linea di partenza / boe</div>
+            <div class="legend-row"><span class="legend-swatch dashed" style="border-color:#c89b3c;"></span>Rotta prevista verso il campo</div>
+            <div class="legend-row"><span class="legend-swatch dashed" style="border-color:#8fa8a6;"></span>Layline (angolo di bolina stimato)</div>
+            <div class="legend-row"><span class="legend-swatch dashed" style="border-color:#c1473b;"></span>Confine del campo di regata</div>
+            <div class="legend-row"><span class="legend-dot-sm" style="background:#4f8fe0;"></span>Corrente stimata</div>
+            <div class="legend-row"><span class="legend-dot-sm" style="background:#e0654f;"></span>Barca in regata (modalità Naviga vele)</div>
+          </div>
+          <button class="map-legend-btn" id="mapLegendBtn" type="button">
+            <svg class="icon"><use href="#icon-flag"/></svg>Percorso di regata
+          </button>
+        </div>
+      </div>
+
+      <div class="vpf-sheet" id="vpfSheet">
+        <button class="sheet-grabber-row" id="sheetGrabberRow" type="button" aria-label="Espandi o riduci l'elenco">
+          <span class="sheet-grabber"></span>
+        </button>
+        <div class="vpf-sheet-head">
+          <span class="count mono" id="vpfCount">5 punti</span>
+          <button class="btn-ghost" id="vpfExpandLabel" type="button">Mostra tutti</button>
+        </div>
+        <div class="vpf-list" id="vpfList"></div>
+        <div class="vpf-list" id="boatList" hidden></div>
+      </div>
+
+      <div class="vpf-detail-overlay" id="vpfDetailOverlay" hidden>
+        <div class="vpf-detail-sheet" id="vpfDetailSheet"></div>
+      </div>
+    </section>
+
+    <!-- ============ 4. Live — stile app di diretta sportiva (DAZN/Sky/ESPN) ============ -->
+    <section class="screen" data-screen="live">
+      <div class="live-scroll">
+
+        <div class="live-hero">
+          <span class="phase-pill">Fase 2 — anteprima design · dati simulati</span>
+          <span class="live-hero-badge"><span class="dot"></span>LIVE</span>
+          <h1>Regata 4 · Flotta A</h1>
+          <p>Percorso costiero, Posillipo → Castel dell'Ovo</p>
+          <div class="live-hero-meta">
+            <span><svg class="icon"><use href="#icon-crowd"/></svg>3.240 in diretta</span>
+            <span><svg class="icon"><use href="#icon-wind"/></svg>14 kn · NO</span>
+          </div>
+          <button class="btn-primary live-hero-cta" type="button" data-goto="map" data-vpf-mode="boats">
+            <svg class="icon"><use href="#icon-play"/></svg>Segui le vele sulla mappa
+          </button>
+        </div>
+
+        <div class="segmented live-subnav" id="liveSubnav">
+          <button class="chip active" data-live-tab="diretta">Diretta</button>
+          <button class="chip" data-live-tab="classifica">Classifica</button>
+          <button class="chip" data-live-tab="news">News</button>
+        </div>
+
+        <div class="live-panel" data-live-panel="diretta">
+          <div class="telemetry-row">
+            <div class="telemetry-tile"><span class="label">In testa</span><span class="value">ITA 1</span></div>
+            <div class="telemetry-tile"><span class="label">Prossima boa</span><span class="value">6 min</span></div>
+            <div class="telemetry-tile"><span class="label">Vento</span><span class="value">14 kn NO</span></div>
+            <div class="telemetry-tile"><span class="label">Corrente</span><span class="value">0.6 kn</span></div>
+          </div>
+
+          <div class="home-section">
+            <div class="section-head"><h3>Cronaca live</h3></div>
+            <div class="timeline" id="liveTimeline"></div>
+          </div>
+        </div>
+
+        <div class="live-panel" data-live-panel="classifica" hidden>
+          <div class="home-section">
+            <div class="section-head"><h3><svg class="icon"><use href="#icon-trophy"/></svg>Classifica Flotta A</h3></div>
+            <div class="standings-list" id="standingsList"></div>
+          </div>
+        </div>
+
+        <div class="live-panel" data-live-panel="news" hidden>
+          <div class="home-section">
+            <div class="section-head"><h3><svg class="icon"><use href="#icon-doc"/></svg>News</h3></div>
+            <div class="news-list" id="newsListLive"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ 5. Prediction Game — anteprima di design (M2) ============ -->
+    <section class="screen" data-screen="game">
+      <div class="live-scroll">
+
+        <div class="game-hero">
+          <span class="phase-pill">Fase 2 — anteprima design · dati simulati</span>
+          <h1>Prediction Game</h1>
+          <p>Previsioni tattiche sulla Regata 4, Flotta A — indovina e scala la classifica.</p>
+
+          <div class="predict-card" id="predictCard">
+            <div class="predict-card-head">
+              <span class="predict-question" id="predictQuestion">Chi vira per primo verso la Boa 2?</span>
+              <span class="predict-timer"><svg class="icon"><use href="#icon-clock"/></svg><span id="predictTimer">0:48</span></span>
+            </div>
+            <div class="predict-options" id="predictOptions"></div>
+            <div class="predict-foot">
+              <span class="predict-points">+<span id="predictPoints">50</span> punti se indovini</span>
+              <span class="predict-confirm" id="predictConfirm" hidden>Previsione registrata</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="live-panel" data-live-panel="game-body">
+          <div class="stat-grid">
+            <div class="stat-tile accent">
+              <span class="stat-value mono" id="gameScore">1.240</span>
+              <span class="stat-label">Il tuo punteggio</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value mono">#<span id="gameRank">4</span></span>
+              <span class="stat-label">Posizione in classifica</span>
+            </div>
+          </div>
+
+          <div class="home-section">
+            <div class="section-head"><h3><svg class="icon"><use href="#icon-trophy"/></svg>Classifica giocatori</h3></div>
+            <div class="standings-list" id="gameLeaderboard"></div>
+          </div>
+
+          <div class="home-section">
+            <div class="section-head"><h3>Le tue ultime previsioni</h3></div>
+            <div class="timeline" id="gameHistory"></div>
+          </div>
+
+          <div class="home-section">
+            <div class="placeholder-note subtle">
+              <svg class="icon"><use href="#icon-shield"/></svg>
+              <span>Anteprima di design: la validazione server-side delle previsioni e la protezione anti-bot/anti-cheat sono un requisito non negoziabile dal primo prototipo funzionante (CLAUDE.md §6) — non ancora implementate qui, che è solo interfaccia statica.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="app-tabbar">
+    <button class="app-tab active" data-panel="home"><svg class="icon tab-icon"><use href="#icon-tab-home"/></svg><span>Home</span></button>
+    <button class="app-tab" data-panel="live"><svg class="icon tab-icon"><use href="#icon-tab-live"/></svg><span>Live</span></button>
+    <button class="app-tab" data-panel="map"><svg class="icon tab-icon"><use href="#icon-tab-map"/></svg><span>Mappa</span></button>
+    <button class="app-tab" data-panel="game"><svg class="icon tab-icon"><use href="#icon-tab-game"/></svg><span>Gioco</span></button>
+  </nav>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

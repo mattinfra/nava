@@ -1333,7 +1333,8 @@ section {
   justify-content: space-between;
 }
 
-.ar-demo-badge {
+.ar-info-btn {
+  all: unset;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1347,8 +1348,29 @@ section {
   border-radius: 999px;
   box-shadow: 0 2px 8px -2px rgba(0,0,0,0.5);
   white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.1s ease;
 }
-.ar-demo-badge .icon { width: 12px; height: 12px; }
+.ar-info-btn:active { transform: scale(0.96); }
+.ar-info-btn:focus-visible { outline: 2px solid #14201d; outline-offset: 2px; }
+.ar-info-btn .icon { width: 12px; height: 12px; }
+
+.ar-info-tooltip {
+  position: absolute;
+  top: 52px;
+  left: 14px;
+  right: 14px;
+  z-index: 5;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: #eaf3f1;
+  background: rgba(10, 20, 23, 0.88);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 12px;
+  padding: 11px 13px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 24px -10px rgba(0,0,0,0.6);
+}
 
 .ar-close {
   all: unset;
@@ -1478,6 +1500,30 @@ section {
 .ar-bottom-label { font-size: 0.6rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--brass-soft); font-weight: 700; }
 .ar-bottom-title { font-size: 0.92rem; font-weight: 700; color: #f4f9f8; }
 .ar-bottom-meta { font-size: 0.72rem; color: #b7c9c7; }
+
+/* Live ticker: a diretta.it-style score strip fused into the AR bottom
+   card — same live numbers as the Live tab's broadcast bar (driven by the
+   same timing formulas) so the app never contradicts itself across screens. */
+.ar-ticker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.68rem;
+  color: #d8e6e4;
+  margin-bottom: 8px;
+}
+.ar-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.ar-ticker-item b { font-weight: 700; color: #eaf3f1; font-size: 0.68rem; }
+.ar-ticker-item.leader b { color: var(--brass-soft); }
+.ar-ticker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dot); flex-shrink: 0; }
+.ar-ticker-sep { color: #5c716f; }
+.ar-bottom-divider { height: 1px; background: rgba(255,255,255,0.14); margin-bottom: 8px; }
 
 /* ---- Vantage-point dock: a fixed-height strip *below* the map, not an
    overlay sheet on top of it — the map keeps its full canvas, the dock

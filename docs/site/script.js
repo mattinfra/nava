@@ -1248,6 +1248,102 @@
     }
     window.addEventListener('resize', arResize);
 
+    function fmtHeading(deg) {
+      var d = Math.round(((deg % 360) + 360) % 360);
+      return (d < 100 ? (d < 10 ? '00' : '0') : '') + d + '°';
+    }
+
+    // ---- Mini-radar: a heading-up "you are here" compass rose, Google
+    // Maps' look-around direction-cone convention applied to the whole
+    // scene — same bearings the horizon view uses, so it never disagrees
+    // with what's on screen; panning the horizon visibly rotates the cone. ----
+    function drawMiniMap(aBearing, bBearing) {
+      var size = 76, pad = 14, topOffset = 52;
+      var mmX = aw - pad - size, mmY = topOffset;
+      if (aw < 220 || ah < 220) return;
+      var cx = mmX + size / 2, cy = mmY + size / 2;
+      var r = size / 2 - 6;
+
+      arCtx.save();
+      arCtx.beginPath();
+      arCtx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      arCtx.clip();
+
+      var bg = arCtx.createRadialGradient(cx, cy, 4, cx, cy, r + 3);
+      bg.addColorStop(0, 'rgba(20,48,55,0.95)');
+      bg.addColorStop(1, 'rgba(7,18,22,0.95)');
+      arCtx.fillStyle = bg;
+      arCtx.fillRect(mmX, mmY, size, size);
+
+      arCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+      arCtx.lineWidth = 1;
+      [0.5, 0.85].forEach(function (f) {
+        arCtx.beginPath();
+        arCtx.arc(cx, cy, r * f, 0, Math.PI * 2);
+        arCtx.stroke();
+      });
+
+      // Heading-up field-of-view wedge, exactly the FOV rendered below.
+      arCtx.save();
+      arCtx.translate(cx, cy);
+      var halfFov = (FOV / 2) * Math.PI / 180;
+      arCtx.beginPath();
+      arCtx.moveTo(0, 0);
+      arCtx.arc(0, 0, r, -Math.PI / 2 - halfFov, -Math.PI / 2 + halfFov);
+      arCtx.closePath();
+      var wedge = arCtx.createRadialGradient(0, 0, 0, 0, 0, r);
+      wedge.addColorStop(0, 'rgba(79,143,224,0.32)');
+      wedge.addColorStop(1, 'rgba(79,143,224,0)');
+      arCtx.fillStyle = wedge;
+      arCtx.fill();
+      arCtx.restore();
+
+      function plot(bearingDeg, color, radius) {
+        var rel = normDeg(bearingDeg - heading);
+        var rad = (rel - 90) * Math.PI / 180;
+        var px = cx + Math.cos(rad) * r * 0.78;
+        var py = cy + Math.sin(rad) * r * 0.78;
+        arCtx.beginPath();
+        arCtx.arc(px, py, radius, 0, Math.PI * 2);
+        arCtx.fillStyle = color;
+        arCtx.fill();
+      }
+      plot(SCENE.mark.bearing, '#e0bd6d', 3.2);
+      plot(aBearing, '#e0654f', 2.6);
+      plot(bBearing, '#4f8fe0', 2.6);
+
+      // North indicator, rotates opposite the pan so it stays truthful to
+      // the (fictional but internally consistent) scene bearings.
+      var nRad = (normDeg(0 - heading) - 90) * Math.PI / 180;
+      arCtx.beginPath();
+      arCtx.arc(cx + Math.cos(nRad) * (r - 3), cy + Math.sin(nRad) * (r - 3), 1.6, 0, Math.PI * 2);
+      arCtx.fillStyle = 'rgba(255,255,255,0.7)';
+      arCtx.fill();
+
+      arCtx.restore();
+
+      // "You are here" dot, center, drawn outside the clip so its ring reads crisp.
+      arCtx.beginPath();
+      arCtx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+      arCtx.fillStyle = '#eaf3f1';
+      arCtx.fill();
+      arCtx.lineWidth = 1;
+      arCtx.strokeStyle = 'rgba(10,20,23,0.9)';
+      arCtx.stroke();
+
+      arCtx.beginPath();
+      arCtx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      arCtx.strokeStyle = 'rgba(255,255,255,0.22)';
+      arCtx.lineWidth = 1;
+      arCtx.stroke();
+
+      arCtx.font = '700 8px ui-monospace, monospace';
+      arCtx.fillStyle = 'rgba(255,255,255,0.55)';
+      arCtx.textAlign = 'center';
+      arCtx.fillText('N', cx + Math.cos(nRad) * (r - 3), cy + Math.sin(nRad) * (r - 3) - 5);
+      arCtx.textAlign = 'left';
+    }
+
     // Coastline height profile as a function of bearing: a gently varying
     // shoreline with two named landmarks bumped up out of the noise.
     function coastHeight(bearing) {
@@ -1373,6 +1469,29 @@
       if (edgeLeft) edgeLeft.hidden = !(markOffscreen && markRel < 0);
       if (edgeRight) edgeRight.hidden = !(markOffscreen && markRel > 0);
 
+      // ---- Live telemetry: same speed/gap formulas as the Live tab's
+      // broadcast bar (race-canvas boatDefs: speedBase/speedSwing, phase
+      // 0 and 0.5, period 2600ms), driven by the same rAF clock — so the
+      // numbers never contradict what's shown on the Live or Home screens.
+      var speedA = 18.4 + Math.sin(time / 2600) * 1.1;
+      var speedB = 17.6 + Math.sin(time / 2600 + 3) * 0.9;
+      var gapSeconds = 2.4 + Math.abs(Math.sin(time / 5200)) * 5.2;
+      // Compass headings are a property of the boat, not of where the
+      // viewer is looking — kept independent of aBearing/bBearing so
+      // panning around never makes a boat's own heading jump.
+      var headingA = 38 + Math.sin(tSec / 7) * 4;
+      var headingB = 46 + Math.sin(tSec / 6 + 2) * 4;
+      var tagAMeta = document.getElementById('arTagAMeta');
+      var tagBMeta = document.getElementById('arTagBMeta');
+      if (tagAMeta) tagAMeta.textContent = speedA.toFixed(1) + ' kn · ' + fmtHeading(headingA);
+      if (tagBMeta) tagBMeta.textContent = speedB.toFixed(1) + ' kn · ' + fmtHeading(headingB);
+      var tickerASpeed = document.getElementById('arTickerASpeed');
+      var tickerGap = document.getElementById('arTickerGap');
+      if (tickerASpeed) tickerASpeed.textContent = speedA.toFixed(1) + ' kn';
+      if (tickerGap) tickerGap.textContent = '+' + gapSeconds.toFixed(1) + 's';
+
+      drawMiniMap(aBearing, bBearing);
+
       if (!reduceMotion || dragging) {
         arRafId = requestAnimationFrame(drawAr);
       } else {
@@ -1417,6 +1536,18 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !arOverlay.hidden) closeArOverlay();
     });
+
+    // ---- Honesty toggle: explicit disclosure of what's simulated vs.
+    // real, one tap away rather than a permanent wall of caption text. ----
+    var arInfoBtn = document.getElementById('arInfoBtn');
+    var arInfoTooltip = document.getElementById('arInfoTooltip');
+    if (arInfoBtn && arInfoTooltip) {
+      arInfoBtn.addEventListener('click', function () {
+        var open = arInfoTooltip.hidden;
+        arInfoTooltip.hidden = !open;
+        arInfoBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
 
     // Drag-to-look-around: pointer delta maps to a heading change scaled by
     // the field of view, so a full-width drag pans roughly one FOV.

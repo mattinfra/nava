@@ -97,6 +97,35 @@ Da avviare solo se le fasi precedenti sono stabili e c'è tempo/motivazione resi
 - Prototipo separato, non integrato subito nell'app principale.
 - Overlay camera con dati semplificati (nome barca, posizione) su dati simulati.
 - Valutare solo alla fine se e come integrarlo nel prodotto principale.
+- **Riferimento di visione**: il concept AR in `docs/site` (radar heading-up stile Maps, ticker live
+  stile diretta.it, telemetria rotta/velocità) è più ricco di quanto serva per l'MVP di questa fase —
+  è materiale di pitch, non lo scope di M3. Lo scope reale resta quello sopra (nome + posizione su
+  overlay camera); il concept va consultato come nord stella se/quando si deciderà di espandere M3
+  oltre l'MVP.
+
+## Backlog di visione — fusione "diretta.it + Google Maps"
+
+Non è una fase pianificata (nessuna di queste voci sblocca o è sbloccata dalle Fasi 0-4 sopra):
+è la direzione di prodotto per un'esperienza completa, da riprendere dopo la Fase 3 (hardening).
+Ordinate per impatto/costo stimato, non per priorità cronologica.
+
+1. **Notifiche push sugli eventi chiave** (virata, cambio testa, apertura Prediction Game) —
+   l'equivalente sailing della notifica gol di diretta.it. Riusa l'infrastruttura WebSocket già
+   prevista in M1/M2, alto impatto a basso costo incrementale.
+2. **Routing pedonale/trasporto verso il vantage point scelto** — oggi M1 dà solo la distanza in
+   metri; con MapLibre + un motore di routing leggero (es. OSRM) si chiude il loop "dove andare" +
+   "come arrivarci", nello spirito di Google Maps.
+3. **Popular times storici per i vantage point** (non solo affollamento live) — permette di
+   pianificare prima di uscire di casa, non solo mentre si è già sul posto.
+4. **Calendario regate + risultati storici**, stile sezione "Risultati" di diretta.it — importante
+   per tenere l'app rilevante nei mesi morti, dato che l'infrastruttura è già pensata per scalare a
+   zero ma i *contenuti* devono restare utili anche fuori regata.
+5. **Watchlist multi-regata**: seguire più flotte/regate in contemporanea con badge live, come
+   diretta.it con più partite in corso.
+6. **AR come "look around" leggero** (bussola + GPS su feed camera reale) invece di scena
+   renderizzata — coincide con lo scope reale di M3 sopra, va qui solo per completezza del backlog.
+7. **Condivisione social del proprio vantage point / screenshot AR** — leva di crescita naturale per
+   un evento pubblico e gratuito.
 
 ## Metriche di successo del progetto (non della singola feature)
 
